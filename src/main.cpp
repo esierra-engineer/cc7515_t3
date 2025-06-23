@@ -5,9 +5,10 @@
 
 #include "linmath.h"
 
-#include <stdlib.h>
-#include <stddef.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstddef>
+#include <cstdio>
+#include <iostream>
 
 typedef struct Vertex
 {
@@ -52,9 +53,17 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
+    if (key == GLFW_KEY_E && action == GLFW_PRESS)
+        std::cout << "user pressed key: " << key << "\n";
 }
 
-int main(void)
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+        std::cout << "user pressed mouse key: " << button << "\n";
+}
+
+int main()
 {
     glfwSetErrorCallback(error_callback);
 
@@ -65,7 +74,7 @@ int main(void)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(640, 480, "OpenGL Triangle", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(640, 480, "OpenGL Triangle", nullptr, nullptr);
     if (!window)
     {
         glfwTerminate();
@@ -73,6 +82,8 @@ int main(void)
     }
 
     glfwSetKeyCallback(window, key_callback);
+
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
 
     glfwMakeContextCurrent(window);
     gladLoadGL(glfwGetProcAddress);
@@ -123,14 +134,15 @@ int main(void)
 
         mat4x4 m, p, mvp;
         mat4x4_identity(m);
-        mat4x4_rotate_Z(m, m, (float) glfwGetTime());
+        mat4x4_rotate_Z(m, m, 3 * static_cast<float>(glfwGetTime()));
         mat4x4_ortho(p, -ratio, ratio, -1.f, 1.f, 1.f, -1.f);
         mat4x4_mul(mvp, p, m);
 
         glUseProgram(program);
-        glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*) &mvp);
+        glUniformMatrix4fv(mvp_location, 1, GL_FALSE, reinterpret_cast<const GLfloat *>(&mvp));
         glBindVertexArray(vertex_array);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        // DRAW TRIANGLES
+        glDrawArrays(GL_POINTS, 0, 3);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
