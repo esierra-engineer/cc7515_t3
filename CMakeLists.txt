@@ -7,7 +7,8 @@ include_directories(src/include)
 
 
 add_executable(cc7515_t3
-        src/main.cpp)
+        src/main.cpp
+        src/gl.c)
 
 find_package(glfw3 3.3 REQUIRED)
 target_link_libraries(cc7515_t3 glfw)
