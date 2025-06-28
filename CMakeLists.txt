@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 # Include directories
 include_directories("Libraries/include")
-include_directories("include")
+#include_directories("include")
 
 # Add executable with all .cpp and .c files
 add_executable(CC7515_T3
@@ -25,4 +25,4 @@ find_package(glfw3 REQUIRED)
 find_package(OpenGL REQUIRED)
 
 target_link_libraries(CC7515_T3 PRIVATE glfw OpenGL::GL)
-
+#target_link_directories(CC7515_T3 PRIVATE "include")
