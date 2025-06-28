@@ -21,10 +21,16 @@ namespace fs = std::filesystem;
 
 #include "../include/sphere_vertices.h"
 #include "../include/sphere_indices.h"
+#include "nbody.h"
 
 const unsigned int width = 800;
 const unsigned int height = 800;
-const unsigned int Nbodies = 8;
+
+const unsigned int Nbodies = 3;
+GLdouble theTime;
+glm::vec3* pos;
+float speedx = 0.1f;
+
 
 // root folder path
 fs::path src_folder = "/media/storage/git/cc7515_t3/src/shaders";
@@ -58,8 +64,16 @@ GLuint lightIndices[] =
 	4, 6, 7
 };
 
-void drawSpheres(Shader shaderProgram, int N = 12);
 
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if (key == GLFW_KEY_I && action == GLFW_PRESS)
+		speedx += 0.01f;
+	if (key == GLFW_KEY_K && action == GLFW_PRESS)
+		speedx -= 0.01f;
+}
+
+void drawSpheres(Body* bodies, const Shader& shaderProgram, int N, const char *kernelfilename, int localSize);
 
 int main()
 {
@@ -173,6 +187,14 @@ int main()
 	// Creates camera object
 	Camera camera(width, height, glm::vec3(0.0f, 0.0f, 20.0f));
 
+	// create Bodies vector
+	Body* bodies = new Body[Nbodies];
+	// give random positions
+	generateRandomBodies(bodies, Nbodies);
+
+	std::string kernel_filename = "kernel_1_global-memory_1D.ptx";
+	int local_size = 64;
+
 	// Main while loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -199,7 +221,8 @@ int main()
 		VAO1.Bind();
 		// Draw primitives, number of indices, datatype of indices, index of indices
 		//glDrawElements(GL_TRIANGLES, sizeof(sphereIndices) / sizeof(GLuint), GL_UNSIGNED_INT, 0);
-		drawSpheres(shaderProgram, Nbodies);
+		theTime = glfwGetTime();
+		drawSpheres(bodies, shaderProgram, Nbodies, kernel_filename.c_str(), local_size);
 
 		// Tells OpenGL which Shader Program we want to use
 		lightShader.Activate();
@@ -210,6 +233,7 @@ int main()
 		// Draw primitives, number of indices, datatype of indices, index of indices
 		glDrawElements(GL_TRIANGLES, sizeof(lightIndices) / sizeof(int), GL_UNSIGNED_INT, 0);
 
+		glfwSetKeyCallback(window, key_callback);
 
 		// Swap the back buffer with the front buffer
 		glfwSwapBuffers(window);
@@ -234,12 +258,34 @@ int main()
 	return 0;
 }
 
-void drawSpheres(const Shader shaderProgram, int N) {
+void drawSpheres(Body* bodies, const Shader& shaderProgram, int N, const char *kernelfilename, int localSize) {
 	for (int i = 0; i < N; ++i) {
+		std::cout << "[drawSpheres] Animating element in index " << i << ":\n";
+
+		std::cout << "[drawSpheres] from position" <<
+				" x = " <<
+				bodies[i].posVec[0] <<
+				" y = " <<
+				bodies[i].posVec[1] <<
+				" z = " <<
+				bodies[i].posVec[2] << "\n";
+
 		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(i * 2.5f, i * 1.0f, i * 1.5f));
+		simulateNBodyCUDA(bodies, kernelfilename, localSize, N);
+		glm::vec3 newPos = bodies[i].posVec;
+
+		std::cout << "[drawSpheres] to position" <<
+			" x = " <<
+			newPos[0] <<
+				" y = " <<
+					newPos[1] <<
+						" z = " <<
+							newPos[2] << "\n";
+
+		model = glm::translate(model, newPos);
+		//bodies[i].posVec = newPos;
+
 		glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
 		glDrawElements(GL_TRIANGLES, sizeof(sphereIndices) / sizeof(GLuint), GL_UNSIGNED_INT, nullptr);
 	}
-
 }
