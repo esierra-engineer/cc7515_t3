@@ -12,12 +12,12 @@ namespace fs = std::filesystem;
 #include<glm/gtc/matrix_transform.hpp>
 #include<glm/gtc/type_ptr.hpp>
 
-#include"Texture.h"
-#include"shaderClass.h"
-#include"VAO.h"
-#include"VBO.h"
-#include"EBO.h"
-#include"Camera.h"
+#include "../include/Texture.h"
+#include"../include/shaderClass.h"
+#include"../include/VAO.h"
+#include"../include/VBO.h"
+#include"../include/EBO.h"
+#include "../include/Camera.h"
 
 
 const unsigned int width = 800;

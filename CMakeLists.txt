@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 3.31)
-project(opengl_tutorials)
+project(CC7515_T3)
 
 set(CMAKE_CXX_STANDARD 17)
 
 # Include directories
 include_directories("Libraries/include")
-include_directories("resources")
+include_directories("include")
 
 # Add executable with all .cpp and .c files
-add_executable(opengl_tutorials
+add_executable(CC7515_T3
         "src/Camera.cpp"
         "src/EBO.cpp"
         "src/glad.c"
@@ -24,5 +24,5 @@ add_executable(opengl_tutorials
 find_package(glfw3 REQUIRED)
 find_package(OpenGL REQUIRED)
 
-target_link_libraries(opengl_tutorials PRIVATE glfw OpenGL::GL)
+target_link_libraries(CC7515_T3 PRIVATE glfw OpenGL::GL)
 
