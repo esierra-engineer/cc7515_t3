@@ -36,27 +36,47 @@ endforeach()
 
 add_custom_target(compile_ptx ALL DEPENDS ${PTX_FILES})
 
+set(IMGUI_SRC
+        ${CMAKE_SOURCE_DIR}/Libraries/include/imgui/imgui.cpp
+        ${CMAKE_SOURCE_DIR}/Libraries/include/imgui/imgui_draw.cpp
+        ${CMAKE_SOURCE_DIR}/Libraries/include/imgui/imgui_tables.cpp
+        ${CMAKE_SOURCE_DIR}/Libraries/include/imgui/imgui_widgets.cpp
+        ${CMAKE_SOURCE_DIR}/Libraries/include/imgui/imgui_demo.cpp
+        ${CMAKE_SOURCE_DIR}/Libraries/include/imgui/backends/imgui_impl_glfw.cpp
+        ${CMAKE_SOURCE_DIR}/Libraries/include/imgui/backends/imgui_impl_opengl3.cpp
+)
+
+
 # Add executable with all .cpp and .c files
+set(SOURCES
+        ${CMAKE_SOURCE_DIR}/src/Camera.cpp
+        ${CMAKE_SOURCE_DIR}/src/EBO.cpp
+        ${CMAKE_SOURCE_DIR}/src/glad.c
+        ${CMAKE_SOURCE_DIR}/src/Main.cpp
+        ${CMAKE_SOURCE_DIR}/src/shaderClass.cpp
+        ${CMAKE_SOURCE_DIR}/src/stb.cpp
+        ${CMAKE_SOURCE_DIR}/src/Texture.cpp
+        ${CMAKE_SOURCE_DIR}/src/VAO.cpp
+        ${CMAKE_SOURCE_DIR}/src/VBO.cpp
+        ${CMAKE_SOURCE_DIR}/src/utils.cpp
+        ${CMAKE_SOURCE_DIR}/src/nbody_cuda.cu
+)
+
 add_executable(CC7515_T3
-        "src/Camera.cpp"
-        "src/EBO.cpp"
-        "src/glad.c"
-        "src/Main.cpp"
-        "src/shaderClass.cpp"
-        "src/stb.cpp"
-        "src/Texture.cpp"
-        "src/VAO.cpp"
-        "src/VBO.cpp"
-        "src/utils.cpp"
-        "src/nbody_cuda.cu"
-        "src/imgui.cpp"
-        "src/imgui_draw.cpp"
-        "src/imgui_tables.cpp"
-        "src/imgui_widgets.cpp"
+        ${SOURCES}
+        ${IMGUI_SRC}
 )
 
 target_link_libraries(CC7515_T3 PRIVATE glfw OpenGL::GL cuda)
-target_link_directories(CC7515_T3 PRIVATE "include" "Libraries/include")
+target_link_directories(CC7515_T3 PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/Libraries/include/imgui
+)
+
+target_include_directories(CC7515_T3 PRIVATE
+        ${CMAKE_SOURCE_DIR}/Libraries/include/imgui
+        ${CMAKE_SOURCE_DIR}/Libraries/include/imgui/backends
+)
 
 # CUDA-specific target properties
 set_target_properties(CC7515_T3 PROPERTIES
