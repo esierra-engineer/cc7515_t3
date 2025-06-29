@@ -7,6 +7,7 @@ Camera::Camera(int width, int height, glm::vec3 position)
 	Camera::width = width;
 	Camera::height = height;
 	Position = position;
+	Camera::defaultPosition = position;
 }
 
 void Camera::updateMatrix(float FOVdeg, float nearPlane, float farPlane)
@@ -35,6 +36,12 @@ void Camera::Matrix(Shader& shader, const char* uniform)
 void Camera::Inputs(GLFWwindow* window)
 {
 	// Handles key inputs
+	if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS)
+	{
+		std::cout << "Reseting camera...\n";
+		Position = defaultPosition;
+		Orientation = defaultOrientation;
+	}
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 	{
 		Position += speed * Orientation;
@@ -61,11 +68,11 @@ void Camera::Inputs(GLFWwindow* window)
 	}
 	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 	{
-		speed = 0.4f;
+		speed = 4 * NORMAL_SPEED;
 	}
 	else if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE)
 	{
-		speed = 0.1f;
+		speed = NORMAL_SPEED;
 	}
 
 

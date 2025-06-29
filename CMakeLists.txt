@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.31)
+cmake_minimum_required(VERSION 3.25)
 set(CMAKE_CUDA_COMPILER "/usr/local/cuda/bin/nvcc")
 set(CMAKE_CUDA_ARCHITECTURES native)
 project(CC7515_T3 LANGUAGES CXX CUDA C)
@@ -49,10 +49,14 @@ add_executable(CC7515_T3
         "src/VBO.cpp"
         "src/utils.cpp"
         "src/nbody_cuda.cu"
+        "src/imgui.cpp"
+        "src/imgui_draw.cpp"
+        "src/imgui_tables.cpp"
+        "src/imgui_widgets.cpp"
 )
 
 target_link_libraries(CC7515_T3 PRIVATE glfw OpenGL::GL cuda)
-target_link_directories(CC7515_T3 PRIVATE "include")
+target_link_directories(CC7515_T3 PRIVATE "include" "Libraries/include")
 
 # CUDA-specific target properties
 set_target_properties(CC7515_T3 PROPERTIES

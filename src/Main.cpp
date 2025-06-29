@@ -1,4 +1,5 @@
 //------- Ignore this ----------
+#include <cuda_runtime_api.h>
 #include<filesystem>
 namespace fs = std::filesystem;
 #include <unistd.h>
@@ -22,15 +23,23 @@ namespace fs = std::filesystem;
 #include "../include/sphere_vertices.h"
 #include "../include/sphere_indices.h"
 #include "nbody.h"
+#include <cuda_gl_interop.h>
+#include "imgui/imgui.h"
+#define DEFAULT_DT 0.01f
 
 const unsigned int width = 800;
 const unsigned int height = 800;
-constexpr auto camera_init_pos = glm::vec3(0.0f, 0.0f, 10.0f);
-const unsigned int Nbodies = 1000;
+constexpr auto camera_init_pos = glm::vec3(0.0f, 0.0f, 120.0f);
+const unsigned int Nbodies = 100;
+const double scale = 1.1;
+float dt = DEFAULT_DT;
 
 // root folder path
 fs::path src_folder = "/media/storage/git/cc7515_t3/src/shaders";
 fs::path resources_folder = "/media/storage/git/cc7515_t3/resources";
+
+// GLfloat* lightVertices = sphereVertices;
+// GLuint* lightIndices = sphereIndices;
 
 GLfloat lightVertices[] =
 { //     COORDINATES     //
@@ -63,9 +72,28 @@ GLuint lightIndices[] =
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	if (key == GLFW_KEY_I && action == GLFW_PRESS){}
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+		std::cout << "Closing...";
+		glfwSetWindowShouldClose(window, true);
+	}
 
-	if (key == GLFW_KEY_K && action == GLFW_PRESS){}
+	if (key == GLFW_KEY_I && action == GLFW_PRESS) {
+		std::cout << "Increasing time step to ";
+		dt += 0.01;
+		std::cout << dt << "\n";
+	}
+
+	if (key == GLFW_KEY_K && action == GLFW_PRESS) {
+		std::cout << "Decreasing time step to ";
+		if (dt >= 0.01) dt -= 0.01;
+		std::cout << dt << "\n";
+	}
+
+	if (key == GLFW_KEY_R && action == GLFW_PRESS) {
+		std::cout << "Defaulting time step to ";
+		dt = DEFAULT_DT;
+		std::cout << dt << "\n";
+	}
 }
 
 
@@ -99,7 +127,7 @@ int main()
 	//Load GLAD so it configures OpenGL
 	gladLoadGL();
 	// Specify the viewport of OpenGL in the Window
-	// In this case the viewport goes from x = 0, y = 0, to x = 800, y = 800
+	// In this case the viewport goes from x = 0, y = 0, to x = width, y = height
 	glViewport(0, 0, width, height);
 
 	// Generates Shader object using shaders default.vert and default.frag
@@ -155,16 +183,16 @@ int main()
 	glm::mat4 lightModel = glm::mat4(1.0f);
 	lightModel = glm::translate(lightModel, lightPos);
 
-	glm::vec3 pyramidPos = glm::vec3(0.0f, 0.0f, 0.0f);
-	glm::mat4 pyramidModel = glm::mat4(1.0f);
-	pyramidModel = glm::translate(pyramidModel, pyramidPos);
+	glm::vec3 spherePos = glm::vec3(0.0f, 0.0f, 0.0f);
+	glm::mat4 sphereModel = glm::mat4(1.0f);
+	sphereModel = glm::translate(sphereModel, spherePos);
 
 
 	lightShader.Activate();
 	glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(lightModel));
 	glUniform4f(glGetUniformLocation(lightShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
 	shaderProgram.Activate();
-	glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(pyramidModel));
+	glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(sphereModel));
 	glUniform4f(glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
 	glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
 
@@ -190,6 +218,10 @@ int main()
 	std::string kernel_filename = "kernel_1_global-memory_1D.ptx";
 	int local_size = 32;
 
+	// CUDA interop
+	cudaGraphicsResource_t cudaVBO;
+	cudaGraphicsGLRegisterBuffer(&cudaVBO, VBO1.ID, cudaGraphicsMapFlagsWriteDiscard);
+
 	// Main while loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -214,10 +246,16 @@ int main()
 		brickTex.Bind();
 		// Bind the VAO so OpenGL knows to use it
 		VAO1.Bind();
-		// Draw primitives, number of indices, datatype of indices, index of indices
-		//glDrawElements(GL_TRIANGLES, sizeof(sphereIndices) / sizeof(GLuint), GL_UNSIGNED_INT, 0);
+		// CUDA interop
+		Body* devicePtr;
+		size_t size;
+		cudaGraphicsMapResources(1, &cudaVBO);
+		cudaGraphicsResourceGetMappedPointer(reinterpret_cast<void **>(&devicePtr), &size, cudaVBO);
 		// update positions
-		simulateNBodyCUDA(bodies, kernel_filename.c_str(), local_size, Nbodies);
+		simulateNBodyCUDA(bodies, kernel_filename.c_str(), local_size, Nbodies, dt);
+
+		cudaGraphicsUnmapResources(1, &cudaVBO);
+		// Draw primitives, number of indices, datatype of indices, index of indices
 		drawSpheres(bodies, shaderProgram, Nbodies);
 
 		// Tells OpenGL which Shader Program we want to use
@@ -229,6 +267,41 @@ int main()
 		// Draw primitives, number of indices, datatype of indices, index of indices
 		glDrawElements(GL_TRIANGLES, sizeof(lightIndices) / sizeof(int), GL_UNSIGNED_INT, 0);
 
+		// Window Test
+		// Create a window called "My First Tool", with a menu bar.
+		bool my_tool_active = 1;
+		ImGui::Begin("My First Tool", &my_tool_active, ImGuiWindowFlags_MenuBar);
+		if (ImGui::BeginMenuBar())
+		{
+			if (ImGui::BeginMenu("File"))
+			{
+				if (ImGui::MenuItem("Open..", "Ctrl+O")) { /* Do stuff */ }
+				if (ImGui::MenuItem("Save", "Ctrl+S"))   { /* Do stuff */ }
+				if (ImGui::MenuItem("Close", "Ctrl+W"))  { my_tool_active = false; }
+				ImGui::EndMenu();
+			}
+			ImGui::EndMenuBar();
+		}
+
+		// Edit a color stored as 4 floats
+		float my_color[4];
+		ImGui::ColorEdit4("Color", my_color);
+
+		// Generate samples and plot them
+		float samples[100];
+		for (int n = 0; n < 100; n++)
+			samples[n] = sinf(n * 0.2f + ImGui::GetTime() * 1.5f);
+		ImGui::PlotLines("Samples", samples, 100);
+
+		// Display contents in a scrolling region
+		ImGui::TextColored(ImVec4(1,1,0,1), "Important Stuff");
+		ImGui::BeginChild("Scrolling");
+		for (int n = 0; n < 50; n++)
+			ImGui::Text("%04d: Some text", n);
+		ImGui::EndChild();
+		ImGui::End();
+
+		// listen to key events
 		glfwSetKeyCallback(window, key_callback);
 
 		// Swap the back buffer with the front buffer
@@ -283,6 +356,7 @@ void drawSpheres(Body* bodies, const Shader& shaderProgram, int N) {
 		}
 
 		model = glm::translate(model, newPos);
+		model = glm::scale(model, glm::vec3(scale, scale, scale));
 
 		glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
 		glDrawElements(GL_TRIANGLES, sizeof(sphereIndices) / sizeof(GLuint), GL_UNSIGNED_INT, nullptr);
