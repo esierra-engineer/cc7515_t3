@@ -3,9 +3,12 @@
 // kernel_1_global-memory.cu
 //
 
+#include <iostream>
+
 #include "../include/nbody.h"
 #define G_CONSTANT 6.67430e-11f
 #define NEAR_ZERO 1e-10f
+#define debug false
 
 // universal gravitational constant
 const float G = G_CONSTANT;
@@ -13,7 +16,9 @@ const float G = G_CONSTANT;
 extern "C" __global__ void updateBodies(Body* bodies, int n, float dt = 0.01f) {
     // i is the body index (global thread index),
     // each thread handles ONE BODY
-    int i = blockIdx.x * blockDim.x + threadIdx.x + blockIdx.y * blockDim.y + threadIdx.y;
+    int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x * blockDim.y +
+        threadIdx.y * blockDim.x + threadIdx.x;
+
 
     // index can go no longer than the number of bodies
     if (i >= n) return;
@@ -24,6 +29,11 @@ extern "C" __global__ void updateBodies(Body* bodies, int n, float dt = 0.01f) {
     // border conditions, initial net force is null
     float Fx = 0.0f, Fy = 0.0f, Fz = 0.0f;
 
+    if (debug) {
+        printf("(IN) Body %d: pos=(%f,%f,%f) vel=(%f,%f,%f)\n", i, bi.posVec.x, bi.posVec.y, bi.posVec.z,
+                bi.velVec.x, bi.velVec.y, bi.velVec.z);
+    }
+
     // for each other body
     for (int j = 0; j < n; ++j) {
         // skip self
@@ -32,9 +42,11 @@ extern "C" __global__ void updateBodies(Body* bodies, int n, float dt = 0.01f) {
         Body bj = bodies[j];
 
         // the distance between bodies in x, y and z
-        float dx = bj.x - bi.x;
-        float dy = bj.y - bi.y;
-        float dz = bj.z - bi.z;
+        float dx = bj.posVec.x - bi.posVec.x;
+        float dy = bj.posVec.y - bi.posVec.y;
+        float dz = bj.posVec.z - bi.posVec.z;
+
+        if (dx == 0 && dy == 0 && dz == 0) continue;
 
         // euclidean distance (avoid division by zero by adding a small constant)
         float distSqr = dx * dx + dy * dy + dz * dz + NEAR_ZERO;
@@ -56,19 +68,24 @@ extern "C" __global__ void updateBodies(Body* bodies, int n, float dt = 0.01f) {
      * then (dv = F * dt / m)
      * then v = v + dv
      * **/
-    bi.vx += Fx / bi.mass * dt;
-    bi.vy += Fy / bi.mass * dt;
-    bi.vz += Fz / bi.mass * dt;
+    bi.velVec.x += Fx / bi.mass * dt;
+    bi.velVec.y += Fy / bi.mass * dt;
+    bi.velVec.z += Fz / bi.mass * dt;
 
     /** update position
      * v = dx/dt
      * dx = dv * dt
      * x = x + dx
      **/
-    bi.x += bi.vx * dt;
-    bi.y += bi.vy * dt;
-    bi.z += bi.vz * dt;
+    bi.posVec.x += bi.velVec.x * dt;
+    bi.posVec.y += bi.velVec.y * dt;
+    bi.posVec.z += bi.velVec.z * dt;
 
     // store the body back into GLOBAL MEMORY
     bodies[i] = bi;
+
+    if (debug) {
+        printf("(OUT) Body %d: pos=(%f,%f,%f) vel=(%f,%f,%f)\n", i,
+        bi.posVec.x, bi.posVec.y, bi.posVec.z, bi.velVec.x, bi.velVec.y, bi.velVec.z);
+    }
 }

@@ -60,6 +60,9 @@ void simulateNBodyCUDA(Body* h_bodies, const char* kernelFilename, int localSize
             kernelArgs, nullptr)                // args
         );
 
+    // wait
+    cudaDeviceSynchronize();
+
     // retrieve the updated positions and velocities
     cudaMemcpy(h_bodies, d_bodies, size, cudaMemcpyDeviceToHost);
 

@@ -5,6 +5,7 @@
 #include "utils.h"
 #include <cuda.h>
 #include <iostream>
+#include <random>
 
 void check(CUresult err, const char* func, const char* file, int line) {
     if (err != CUDA_SUCCESS) {
@@ -17,15 +18,16 @@ void check(CUresult err, const char* func, const char* file, int line) {
 }
 
 void generateRandomBodies(Body* bodies, int n) {
+#define FACTOR 10.0f
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<float> dist(-FACTOR, FACTOR);
     for (int i = 0; i < n; ++i) {
-        bodies[i].posVec = glm::vec3(
-            static_cast<float>(rand()) / RAND_MAX * 2.5f,
-            static_cast<float>(rand()) / RAND_MAX * 2.5f,
-            static_cast<float>(rand()) / RAND_MAX * 2.5f
-            );
+        bodies[i].posVec = glm::vec3(dist(gen), dist(gen), dist(gen));
         bodies[i].velVec = glm::vec3(0.0f);
         bodies[i].mass = 1e10f;
     }
+
 }
 
 CUfunction loadKernelSource(const char* filename, CUcontext* context) {

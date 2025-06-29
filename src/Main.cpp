@@ -23,14 +23,10 @@ namespace fs = std::filesystem;
 #include "../include/sphere_indices.h"
 #include "nbody.h"
 
-const unsigned int width = 800;
-const unsigned int height = 800;
+const unsigned int width = 1024;
+const unsigned int height = 1024;
 
-const unsigned int Nbodies = 3;
-GLdouble theTime;
-glm::vec3* pos;
-float speedx = 0.1f;
-
+const unsigned int Nbodies = 100;
 
 // root folder path
 fs::path src_folder = "/media/storage/git/cc7515_t3/src/shaders";
@@ -67,10 +63,9 @@ GLuint lightIndices[] =
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	if (key == GLFW_KEY_I && action == GLFW_PRESS)
-		speedx += 0.01f;
-	if (key == GLFW_KEY_K && action == GLFW_PRESS)
-		speedx -= 0.01f;
+	if (key == GLFW_KEY_I && action == GLFW_PRESS){}
+
+	if (key == GLFW_KEY_K && action == GLFW_PRESS){}
 }
 
 void drawSpheres(Body* bodies, const Shader& shaderProgram, int N, const char *kernelfilename, int localSize);
@@ -105,8 +100,6 @@ int main()
 	// Specify the viewport of OpenGL in the Window
 	// In this case the viewport goes from x = 0, y = 0, to x = 800, y = 800
 	glViewport(0, 0, width, height);
-
-
 
 	// Generates Shader object using shaders default.vert and default.frag
 	fs::path file = "default.vert";
@@ -185,7 +178,7 @@ int main()
 	glEnable(GL_DEPTH_TEST);
 
 	// Creates camera object
-	Camera camera(width, height, glm::vec3(0.0f, 0.0f, 20.0f));
+	Camera camera(width, height, glm::vec3(0.0f, 0.0f, 100.0f));
 
 	// create Bodies vector
 	Body* bodies = new Body[Nbodies];
@@ -221,7 +214,6 @@ int main()
 		VAO1.Bind();
 		// Draw primitives, number of indices, datatype of indices, index of indices
 		//glDrawElements(GL_TRIANGLES, sizeof(sphereIndices) / sizeof(GLuint), GL_UNSIGNED_INT, 0);
-		theTime = glfwGetTime();
 		drawSpheres(bodies, shaderProgram, Nbodies, kernel_filename.c_str(), local_size);
 
 		// Tells OpenGL which Shader Program we want to use
@@ -260,30 +252,33 @@ int main()
 
 void drawSpheres(Body* bodies, const Shader& shaderProgram, int N, const char *kernelfilename, int localSize) {
 	for (int i = 0; i < N; ++i) {
-		std::cout << "[drawSpheres] Animating element in index " << i << ":\n";
+		if (debug) {
+			std::cout << "[drawSpheres] Animating element in index " << i << ":\n";
 
 		std::cout << "[drawSpheres] from position" <<
 				" x = " <<
-				bodies[i].posVec[0] <<
+				bodies[i].posVec.x <<
 				" y = " <<
-				bodies[i].posVec[1] <<
+				bodies[i].posVec.y <<
 				" z = " <<
-				bodies[i].posVec[2] << "\n";
+				bodies[i].posVec.z << "\n";
+		}
 
 		glm::mat4 model = glm::mat4(1.0f);
 		simulateNBodyCUDA(bodies, kernelfilename, localSize, N);
 		glm::vec3 newPos = bodies[i].posVec;
 
-		std::cout << "[drawSpheres] to position" <<
+		if (debug) {
+			std::cout << "[drawSpheres] to position" <<
 			" x = " <<
-			newPos[0] <<
+			newPos.x <<
 				" y = " <<
-					newPos[1] <<
+					newPos.y <<
 						" z = " <<
-							newPos[2] << "\n";
+							newPos.z << "\n";
+		}
 
 		model = glm::translate(model, newPos);
-		//bodies[i].posVec = newPos;
 
 		glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
 		glDrawElements(GL_TRIANGLES, sizeof(sphereIndices) / sizeof(GLuint), GL_UNSIGNED_INT, nullptr);
