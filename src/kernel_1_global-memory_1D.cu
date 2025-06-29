@@ -4,10 +4,10 @@
 //
 
 #include <iostream>
-
+#include <cstdlib> // For integer abs()
 #include "../include/nbody.h"
 #define G_CONSTANT 6.67430e-11f
-#define NEAR_ZERO 1e-10f
+#define NEAR_ZERO 0.1f
 #define debug false
 
 // universal gravitational constant
@@ -27,7 +27,7 @@ extern "C" __global__ void updateBodies(Body* bodies, int n, float dt = 0.01f) {
     Body bi = bodies[i];
 
     // border conditions, initial net force is null
-    float Fx = 0.0f, Fy = 0.0f, Fz = 0.0f;
+    float F = 0.0f, Fx = 0.0f, Fy = 0.0f, Fz = 0.0f;
 
     if (debug) {
         printf("(IN) Body %d: pos=(%f,%f,%f) vel=(%f,%f,%f)\n", i, bi.posVec.x, bi.posVec.y, bi.posVec.z,
@@ -46,15 +46,16 @@ extern "C" __global__ void updateBodies(Body* bodies, int n, float dt = 0.01f) {
         float dy = bj.posVec.y - bi.posVec.y;
         float dz = bj.posVec.z - bi.posVec.z;
 
-        if (dx == 0 && dy == 0 && dz == 0) continue;
-
-        // euclidean distance (avoid division by zero by adding a small constant)
-        float distSqr = dx * dx + dy * dy + dz * dz + NEAR_ZERO;
-        // inverse of the distance
-        float invDist = rsqrtf(distSqr);
+        // Euclidean distance (avoid division by zero by adding a small constant)
+        float distSqr = dx * dx + dy * dy + dz * dz + NEAR_ZERO * NEAR_ZERO;
 
         // Newton's gravity, vectorial form
-        float F = G * bi.mass * bj.mass * powf(invDist, 3.0f);
+        if (abs(distSqr) > NEAR_ZERO * NEAR_ZERO) {
+            // inverse of the distance
+            float invDist = rsqrtf(distSqr);
+
+            F = G * bi.mass * bj.mass * powf(invDist, 3.0f);
+        }
 
         // update net force over body for x,y,z
         Fx += F * dx;

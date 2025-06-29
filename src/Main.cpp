@@ -23,10 +23,10 @@ namespace fs = std::filesystem;
 #include "../include/sphere_indices.h"
 #include "nbody.h"
 
-const unsigned int width = 1024;
-const unsigned int height = 1024;
-
-const unsigned int Nbodies = 100;
+const unsigned int width = 800;
+const unsigned int height = 800;
+constexpr auto camera_init_pos = glm::vec3(0.0f, 0.0f, 10.0f);
+const unsigned int Nbodies = 1000;
 
 // root folder path
 fs::path src_folder = "/media/storage/git/cc7515_t3/src/shaders";
@@ -68,7 +68,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	if (key == GLFW_KEY_K && action == GLFW_PRESS){}
 }
 
-void drawSpheres(Body* bodies, const Shader& shaderProgram, int N, const char *kernelfilename, int localSize);
+
+void drawSpheres(Body* bodies, const Shader& shaderProgram, int N);
 
 int main()
 {
@@ -84,7 +85,7 @@ int main()
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	// Create a GLFWwindow object of 800 by 800 pixels, naming it "YoutubeOpenGL"
-	GLFWwindow* window = glfwCreateWindow(width, height, "YoutubeOpenGL", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(width, height, "CC7515 Tarea 3", NULL, NULL);
 	// Error check if the window fails to create
 	if (window == NULL)
 	{
@@ -108,7 +109,7 @@ int main()
 	file = "default.frag";
 	fs::path default_frag_path = src_folder / file;
 
-	Shader shaderProgram((default_vert_path.string().c_str()), (default_frag_path.string().c_str()));
+	Shader shaderProgram((default_vert_path.c_str()), (default_frag_path.c_str()));
 	// Generates Vertex Array Object and binds it
 	VAO VAO1;
 	VAO1.Bind();
@@ -117,10 +118,10 @@ int main()
 	// Generates Element Buffer Object and links it to indices
 	EBO EBO1(sphereIndices, sizeof(sphereIndices));
 	// Links VBO attributes such as coordinates and colors to VAO
-	VAO1.LinkAttrib(VBO1, 0, 3, GL_FLOAT, 11 * sizeof(float), (void*)0);
-	VAO1.LinkAttrib(VBO1, 1, 3, GL_FLOAT, 11 * sizeof(float), (void*)(3 * sizeof(float)));
-	VAO1.LinkAttrib(VBO1, 2, 2, GL_FLOAT, 11 * sizeof(float), (void*)(6 * sizeof(float)));
-	VAO1.LinkAttrib(VBO1, 3, 3, GL_FLOAT, 11 * sizeof(float), (void*)(8 * sizeof(float)));
+	VAO1.LinkAttrib(VBO1, 0, 3, GL_FLOAT, 11 * sizeof(float), nullptr);
+	VAO1.LinkAttrib(VBO1, 1, 3, GL_FLOAT, 11 * sizeof(float), reinterpret_cast<void *>(3 * sizeof(float)));
+	VAO1.LinkAttrib(VBO1, 2, 2, GL_FLOAT, 11 * sizeof(float), reinterpret_cast<void *>(6 * sizeof(float)));
+	VAO1.LinkAttrib(VBO1, 3, 3, GL_FLOAT, 11 * sizeof(float), reinterpret_cast<void *>(8 * sizeof(float)));
 	// Unbind all to prevent accidentally modifying them
 	VAO1.Unbind();
 	VBO1.Unbind();
@@ -143,7 +144,7 @@ int main()
 	// Generates Element Buffer Object and links it to indices
 	EBO lightEBO(lightIndices, sizeof(lightIndices));
 	// Links VBO attributes such as coordinates and colors to VAO
-	lightVAO.LinkAttrib(lightVBO, 0, 3, GL_FLOAT, 3 * sizeof(float), (void*)0);
+	lightVAO.LinkAttrib(lightVBO, 0, 3, GL_FLOAT, 3 * sizeof(float), nullptr);
 	// Unbind all to prevent accidentally modifying them
 	lightVAO.Unbind();
 	lightVBO.Unbind();
@@ -168,17 +169,18 @@ int main()
 	glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
 
 	// Texture
-	file = "brick.png";
+	file = "football.png";
 	fs::path texture_path = resources_folder / file;
 	Texture brickTex((texture_path).c_str(), GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
 	brickTex.texUnit(shaderProgram, "tex0", 0);
+
 
 
 	// Enables the Depth Buffer
 	glEnable(GL_DEPTH_TEST);
 
 	// Creates camera object
-	Camera camera(width, height, glm::vec3(0.0f, 0.0f, 100.0f));
+	Camera camera(width, height, camera_init_pos);
 
 	// create Bodies vector
 	Body* bodies = new Body[Nbodies];
@@ -186,7 +188,7 @@ int main()
 	generateRandomBodies(bodies, Nbodies);
 
 	std::string kernel_filename = "kernel_1_global-memory_1D.ptx";
-	int local_size = 64;
+	int local_size = 32;
 
 	// Main while loop
 	while (!glfwWindowShouldClose(window))
@@ -214,7 +216,9 @@ int main()
 		VAO1.Bind();
 		// Draw primitives, number of indices, datatype of indices, index of indices
 		//glDrawElements(GL_TRIANGLES, sizeof(sphereIndices) / sizeof(GLuint), GL_UNSIGNED_INT, 0);
-		drawSpheres(bodies, shaderProgram, Nbodies, kernel_filename.c_str(), local_size);
+		// update positions
+		simulateNBodyCUDA(bodies, kernel_filename.c_str(), local_size, Nbodies);
+		drawSpheres(bodies, shaderProgram, Nbodies);
 
 		// Tells OpenGL which Shader Program we want to use
 		lightShader.Activate();
@@ -250,7 +254,7 @@ int main()
 	return 0;
 }
 
-void drawSpheres(Body* bodies, const Shader& shaderProgram, int N, const char *kernelfilename, int localSize) {
+void drawSpheres(Body* bodies, const Shader& shaderProgram, int N) {
 	for (int i = 0; i < N; ++i) {
 		if (debug) {
 			std::cout << "[drawSpheres] Animating element in index " << i << ":\n";
@@ -265,7 +269,7 @@ void drawSpheres(Body* bodies, const Shader& shaderProgram, int N, const char *k
 		}
 
 		glm::mat4 model = glm::mat4(1.0f);
-		simulateNBodyCUDA(bodies, kernelfilename, localSize, N);
+
 		glm::vec3 newPos = bodies[i].posVec;
 
 		if (debug) {

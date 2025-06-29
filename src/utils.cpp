@@ -18,7 +18,7 @@ void check(CUresult err, const char* func, const char* file, int line) {
 }
 
 void generateRandomBodies(Body* bodies, int n) {
-#define FACTOR 10.0f
+#define FACTOR 30.0f
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<float> dist(-FACTOR, FACTOR);
