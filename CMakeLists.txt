@@ -16,7 +16,7 @@ find_package(OpenGL REQUIRED)
 
 # Kernel PTX generation
 set(KERNEL_SRCS
-        ${CMAKE_SOURCE_DIR}/src/kernel_1_global-memory_1D.cu
+        ${CMAKE_SOURCE_DIR}/src/kernel.cu
 )
 
 set(PTX_FILES "")

@@ -41,7 +41,7 @@ float dt = DEFAULT_DT;
 float sm, m;
 int numBodies = DEFAULT_N_BODIES;
 int specialBodies = 0;
-std::string kernel_filename = "kernel_1_global-memory_1D.ptx";
+std::string kernel_filename = "kernel.ptx";
 int local_size = 32;
 
 

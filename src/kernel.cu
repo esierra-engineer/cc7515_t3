@@ -13,11 +13,11 @@
 // universal gravitational constant
 const float G = G_CONSTANT;
 
-extern "C" __global__ void updateBodies(Body* bodies, int n, float dt = 0.01f) {
+extern "C" __global__ void updateBodies(Body *bodies, int n, float dt = 0.01f) {
     // i is the body index (global thread index),
     // each thread handles ONE BODY
     int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x * blockDim.y +
-        threadIdx.y * blockDim.x + threadIdx.x;
+            threadIdx.y * blockDim.x + threadIdx.x;
 
 
     // index can go no longer than the number of bodies
@@ -31,7 +31,7 @@ extern "C" __global__ void updateBodies(Body* bodies, int n, float dt = 0.01f) {
 
     if (debug) {
         printf("(IN) Body %d: pos=(%f,%f,%f) vel=(%f,%f,%f)\n", i, bi.posVec.x, bi.posVec.y, bi.posVec.z,
-                bi.velVec.x, bi.velVec.y, bi.velVec.z);
+               bi.velVec.x, bi.velVec.y, bi.velVec.z);
     }
 
     // for each other body
@@ -87,6 +87,6 @@ extern "C" __global__ void updateBodies(Body* bodies, int n, float dt = 0.01f) {
 
     if (debug) {
         printf("(OUT) Body %d: pos=(%f,%f,%f) vel=(%f,%f,%f)\n", i,
-        bi.posVec.x, bi.posVec.y, bi.posVec.z, bi.velVec.x, bi.velVec.y, bi.velVec.z);
+               bi.posVec.x, bi.posVec.y, bi.posVec.z, bi.velVec.x, bi.velVec.y, bi.velVec.z);
     }
 }
