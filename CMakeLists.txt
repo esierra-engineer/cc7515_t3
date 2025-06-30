@@ -67,10 +67,6 @@ add_executable(CC7515_T3
 
 target_link_libraries(CC7515_T3 PRIVATE glfw OpenGL::GL cuda)
 
-target_link_directories(CC7515_T3 PRIVATE
-        ${CMAKE_SOURCE_DIR}/Libraries/include/imgui
-)
-
 target_include_directories(CC7515_T3 PRIVATE
         ${CMAKE_SOURCE_DIR}/Libraries/include/imgui
         ${CMAKE_SOURCE_DIR}/Libraries/include/imgui/backends
