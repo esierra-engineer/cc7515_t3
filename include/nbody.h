@@ -20,6 +20,6 @@ public:
 
 void simulateNBodyCPU(Body* bodies, int n, int steps, float dt = 0.01f);
 void simulateNBodyCUDA(Body* h_bodies, const char* kernelFilename, int localSize, int n, float dt=1.0/60.0);
-void generateRandomBodies(Body* bodies, int n);
+void generateRandomBodies(Body* bodies, int n, float mass = 1e10f);
 
 #endif

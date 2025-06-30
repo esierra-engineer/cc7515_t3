@@ -30,20 +30,20 @@ namespace fs = std::filesystem;
 
 #define DEFAULT_DT 0.01f
 #define DEFAULT_N_BODIES 1024
+#define DEFAULT_MASS 1e10f
 
 const unsigned int width = 800;
 const unsigned int height = 800;
 constexpr auto camera_init_pos = glm::vec3(0.0f, 0.0f, 120.0f);
 Body* bodies;
-int Nbodies = DEFAULT_N_BODIES;
 const double scale = 1.1;
 float dt = DEFAULT_DT;
-float m, sm = 1.0;
-int i = 1;
+float sm, m;
+int numBodies = DEFAULT_N_BODIES;
+int specialBodies = 0;
+std::string kernel_filename = "kernel_1_global-memory_1D.ptx";
+int local_size = 32;
 
-// root folder path
-fs::path src_folder = "/media/storage/git/cc7515_t3/src/shaders";
-fs::path resources_folder = "/media/storage/git/cc7515_t3/resources";
 
 GLfloat lightVertices[] =
 { //     COORDINATES     //
@@ -110,6 +110,7 @@ void showConfWindow();
 
 int main()
 {
+	sm = m = 1.0f;
 	// Initialize GLFW
 	glfwInit();
 
@@ -140,11 +141,9 @@ int main()
 	glViewport(0, 0, width, height);
 
 	// Generates Shader object using shaders default.vert and default.frag
-	fs::path file = "default.vert";
-	fs::path default_vert_path = src_folder / file;
+	fs::path default_vert_path = "shaders/default.vert";
 
-	file = "default.frag";
-	fs::path default_frag_path = src_folder / file;
+	fs::path default_frag_path = "shaders/default.frag";
 
 	Shader shaderProgram((default_vert_path.c_str()), (default_frag_path.c_str()));
 	// Generates Vertex Array Object and binds it
@@ -166,11 +165,9 @@ int main()
 
 
 	// Shader for light cube
-	file = "light.vert";
-	fs::path light_vert_path = src_folder / file;
+	fs::path light_vert_path = "shaders/light.vert";
 
-	file = "light.frag";
-	fs::path light_frag_path = src_folder / file;
+	fs::path light_frag_path = "shaders/light.frag";
 
 	Shader lightShader((light_vert_path.string().c_str()), (light_frag_path.string().c_str()));
 	// Generates Vertex Array Object and binds it
@@ -206,8 +203,7 @@ int main()
 	glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
 
 	// Texture
-	file = "football.png";
-	fs::path texture_path = resources_folder / file;
+	fs::path texture_path = "resources/football.png";
 	Texture brickTex((texture_path).c_str(), GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
 	brickTex.texUnit(shaderProgram, "tex0", 0);
 
@@ -218,14 +214,6 @@ int main()
 
 	// Creates camera object
 	Camera camera(width, height, camera_init_pos);
-
-	// create Bodies vector
-	bodies = new Body[Nbodies];
-	// give random positions
-	generateRandomBodies(bodies, Nbodies);
-
-	std::string kernel_filename = "kernel_1_global-memory_1D.ptx";
-	int local_size = 32;
 
 	// CUDA interop
 	cudaGraphicsResource_t cudaVBO;
@@ -243,6 +231,11 @@ int main()
 	ImGui_ImplGlfw_InitForOpenGL(window, true);          // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
 	ImGui_ImplOpenGL3_Init();
 
+	// create Bodies vector
+	bodies = new Body[DEFAULT_N_BODIES];
+	// give random positions
+	generateRandomBodies(bodies, DEFAULT_N_BODIES, DEFAULT_MASS);
+
 	// Main while loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -254,7 +247,6 @@ int main()
 		// Updates and exports the camera matrix to the Vertex Shader
 		camera.updateMatrix(45.0f, 0.1f, 100.0f);
 
-
 		// Tells OpenGL which Shader Program we want to use
 		shaderProgram.Activate();
 		// Exports the camera Position to the Fragment Shader for specular lighting
@@ -265,10 +257,8 @@ int main()
 		brickTex.Bind();
 		// Bind the VAO so OpenGL knows to use it
 		VAO1.Bind();
-
-		cudaGraphicsUnmapResources(1, &cudaVBO);
 		// Draw primitives, number of indices, datatype of indices, index of indices
-		drawSpheres(bodies, shaderProgram, Nbodies);
+		drawSpheres(bodies, shaderProgram, numBodies);
 
 		// Tells OpenGL which Shader Program we want to use
 		lightShader.Activate();
@@ -289,26 +279,31 @@ int main()
 
 			ImGui::Begin("Configuration");
 			// ImGui::Text("Hello, world %d", 123);
-			if (ImGui::Button("Save")) {
-
-			}
 			ImGui::SliderFloat("Time Step", &dt, DEFAULT_DT, 1.0f);
-			ImGui::SliderInt("Bodies", &i, 1, DEFAULT_N_BODIES);
-			ImGui::SliderFloat("Normal Mass (e+10)", &m, 1, 10.0f, "%.1f");
-			ImGui::SliderFloat("Special Mass (e+10)", &sm, 1, 10.0f, "%.1f");
+			ImGui::SliderInt("Bodies", &numBodies, 1, DEFAULT_N_BODIES);
+			ImGui::SliderInt("Special Bodies", &specialBodies, 0, DEFAULT_N_BODIES);
+			ImGui::SliderFloat("Normal Mass (e+10)", &m, 1, 1000.0f, "%.1f");
+			ImGui::SliderFloat("Special Mass (e+10)", &sm, 1, 1000.0f, "%.1f");
+			if (ImGui::Button("Reset")) {
+				float mass = m * DEFAULT_MASS;
+				generateRandomBodies(bodies, numBodies, mass);
+				showConf = !showConf;
+			}
 			ImGui::End();
-
-			// CUDA interop
-			Body* devicePtr;
-			size_t size;
-			cudaGraphicsMapResources(1, &cudaVBO);
-			cudaGraphicsResourceGetMappedPointer(reinterpret_cast<void **>(&devicePtr), &size, cudaVBO);
-			// update positions
-			simulateNBodyCUDA(bodies, kernel_filename.c_str(), local_size, Nbodies, dt);
 
 			ImGui::Render();
 			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		}
+
+		// CUDA interop
+		Body* devicePtr;
+		size_t size;
+		cudaGraphicsMapResources(1, &cudaVBO);
+		cudaGraphicsResourceGetMappedPointer(reinterpret_cast<void **>(&devicePtr), &size, cudaVBO);
+		// update positions
+		simulateNBodyCUDA(bodies, kernel_filename.c_str(), local_size, numBodies, dt);
+		// unmap resources
+		cudaGraphicsUnmapResources(1, &cudaVBO);
 
 		// listen to key events
 		processInput(window, &camera);

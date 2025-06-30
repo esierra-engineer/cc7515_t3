@@ -93,3 +93,11 @@ target_compile_options(CC7515_T3 PRIVATE
 
 # Ensure PTX is built before main executable
 add_dependencies(CC7515_T3 compile_ptx)
+
+# Copy shaders to build directory
+file(COPY ${CMAKE_SOURCE_DIR}/src/shaders
+        DESTINATION ${CMAKE_BINARY_DIR})
+
+# Copy texture to build directory
+file(COPY ${CMAKE_SOURCE_DIR}/resources
+        DESTINATION ${CMAKE_BINARY_DIR})
