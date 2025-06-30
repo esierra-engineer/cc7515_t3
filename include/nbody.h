@@ -1,8 +1,7 @@
 //
 // Created by erick on 5/8/25.
 //
-#include <cstdlib>
-#include<glm/glm.hpp>
+#include <glm/glm.hpp>
 
 #ifndef NBODY_H
 #define NBODY_H

@@ -6,8 +6,6 @@ project(CC7515_T3 LANGUAGES CXX CUDA C)
 set(CMAKE_CXX_STANDARD 17)
 
 # Include directories
-include_directories("include")
-include_directories("Libraries/include")
 include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 
 # Link GLFW
@@ -68,14 +66,16 @@ add_executable(CC7515_T3
 )
 
 target_link_libraries(CC7515_T3 PRIVATE glfw OpenGL::GL cuda)
+
 target_link_directories(CC7515_T3 PRIVATE
-        ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/Libraries/include/imgui
 )
 
 target_include_directories(CC7515_T3 PRIVATE
         ${CMAKE_SOURCE_DIR}/Libraries/include/imgui
         ${CMAKE_SOURCE_DIR}/Libraries/include/imgui/backends
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/Libraries/include
 )
 
 # CUDA-specific target properties
