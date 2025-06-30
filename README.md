@@ -1,4 +1,23 @@
 # Tarea 3 - Problema de los N cuerpos
+## Requirements
+* Debian 12 x64
+* CUDA compatible GPU
+* CUDA 12 compiler
+* CMake 3.25
+* OpenGL
+* GLFW 
+## Usage
+Compilation follows the standard cmake procedure.
+```shell
+# create build directory
+mkdir build && cd build
+# cmake call source on parent directory and output in build/
+cmake -S .. -B .
+# compile and create binary
+make
+# run
+./CC7515_T3
+```
 ## Interoperabilidad
 Implemented interoperability between OpenGL and CUDA.
 ## Vertex shader and fragment shader
@@ -29,34 +48,34 @@ Pending.
 
 Camera system is implemented using OpenGL, GLFW, and GLM. It supports first-person camera movement and orientation using keyboard and mouse input.
 
-| Key                           | Action                      |
-|-------------------------------|-----------------------------|
-| `W`                           | Move forward                |
-| `A`                           | Move left                   |
-| `S`                           | Move backward               |
-| `D`                           | Move right                  |
-| `SPACE`                       | Move up                     |
-| `LEFT CONTROL`                | Move down                   |
-| `LEFT SHIFT (pressed)`        | Speed up (x4)               |
+| Key                           | Action                       |
+|-------------------------------|------------------------------|
+| `W`                           | Move forward                 |
+| `A`                           | Move left                    |
+| `S`                           | Move backward                |
+| `D`                           | Move right                   |
+| `C`                           | Open Configuration           |
+| `SPACE`                       | Move up                      |
+| `LEFT CONTROL`                | Move down                    |
+| `LEFT SHIFT (pressed)`        | Speed up (x4)                |
 | `Left Mouse Button (pressed)` | Look around (mouse movement) |
-| `R`                           | Reset time step             |
-| `T`                           | Reset camera                |
-| `I`                           | Increase time step          |
-| `K`                           | Decrease time step          |
-| `Esc`                         | Exit                        |
+| `R`                           | Reset time step              |
+| `T`                           | Reset camera                 |
+| `I`                           | Increase time step           |
+| `K`                           | Decrease time step           |
+| `Esc`                         | Exit                         |
 
 * Debe existir una interfaz que permita al usuario cambiar los parámetros de la simulación
 en tiempo real, como la velocidad de la simulación, el número de cuerpos, la masa general
 de los cuerpos y si se procesa la lógica en la CPU o en la GPU.
 
-Pending.
-* interfaz
-* velocidad simulacion
-* numero cuerpos
+* Interface: press ```c``` to open and close configuration window.
+* Simulation speed: Adjust "time step" slider
+* Number of bodies:
 * masa general
-* GPU/CPU
+* GPU/CPU:
 
 * La interfaz se debe activar con una tecla y desactivar con la misma para facilitar el manejo
 de la cámara
 
-Pending.
+Press ```c``` to open and close configuration window.

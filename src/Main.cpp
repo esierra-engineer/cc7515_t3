@@ -31,6 +31,7 @@ namespace fs = std::filesystem;
 #define DEFAULT_DT 0.01f
 #define DEFAULT_N_BODIES 1024
 #define DEFAULT_MASS 1e10f
+#define SHOW_CONF_AT_START false
 
 const unsigned int width = 800;
 const unsigned int height = 800;
@@ -100,8 +101,7 @@ void key_callback(GLFWwindow* window)
 	}
 }
 
-
-bool showConf = true;
+bool showConf = SHOW_CONF_AT_START;
 void processInput(GLFWwindow* window, Camera* camera);
 
 void drawSpheres(Body* bodies, const Shader& shaderProgram, int N);
@@ -204,7 +204,7 @@ int main()
 
 	// Texture
 	fs::path texture_path = "resources/football.png";
-	Texture brickTex((texture_path).c_str(), GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
+	Texture brickTex(texture_path.c_str(), GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
 	brickTex.texUnit(shaderProgram, "tex0", 0);
 
 
