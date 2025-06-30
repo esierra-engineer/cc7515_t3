@@ -1,81 +1,117 @@
-# Tarea 3 - Problema de los N cuerpos
+# N-Body Problem Simulation
+
+A real-time 3D N-body gravitational simulation implemented with CUDA and OpenGL, featuring GPU acceleration and interactive controls.
+
 ## Requirements
-* Debian 12 x64
-* CUDA compatible GPU
-* CUDA 12 compiler
-* CMake 3.25
-* OpenGL
-* GLFW 
-## Usage
-Compilation follows the standard cmake procedure.
-```shell
-# create build directory
+
+- **Operating System**: Debian 12 x64
+- **Hardware**: CUDA-compatible GPU
+- **Software Dependencies**:
+    - CUDA 12 compiler
+    - CMake 3.25+
+    - OpenGL
+    - GLFW
+    - GLM (OpenGL Mathematics)
+
+## Installation & Usage
+
+### Building the Project
+
+Follow the standard CMake build procedure:
+
+```bash
+# Create build directory
 mkdir build && cd build
-# cmake call source on parent directory and output in build/
+
+# Configure the project
 cmake -S .. -B .
-# compile and create binary
+
+# Compile and create binary
 make
-# run
+
+# Run the simulation
 ./CC7515_T3
 ```
-## Interoperabilidad
-Implemented interoperability between OpenGL and CUDA.
-## Vertex shader and fragment shader
-Vertex and fragment shader for both bodies and light source in ```src/shaders``` folder.
-## La simulación debe ser en 3D.
 
-Particle model is based on class ```Body```, which attributes are position, velocity and mass. Position and velocity 
-are defined as GLM vec3<float> objects.  
-## Debe haber iluminación simple.
+## Features
 
-A single source of light is always initialized at (0.5, 0.5, 0.5).
-Specular reflection is implemented in each shader.
+### 🔧 CUDA-OpenGL Interoperability
+Seamless integration between CUDA compute kernels and OpenGL rendering pipeline for optimal performance.
 
-TODO: Color is white. Implement variable color.
+### 🎨 Graphics & Rendering
+- **3D Simulation**: Full 3D particle physics simulation
+- **Lighting System**: Simple lighting with specular reflection
+- **Textured Particles**: Spherical particles with football texture (`resources/football.png`)
+- **Shaders**: Custom vertex and fragment shaders located in `src/shaders/`
 
-TODO: Source of light is a cube, better if it is a sphere.
+### ⚙️ Physics Engine
+- **Particle Model**: Based on `Body` class with position, velocity, and mass attributes
+- **Special Particles**: Support for particles with different masses and properties
+- **GPU/CPU Processing**: Toggle between GPU and CPU computation modes
 
-## El modelo de las particulas debe ser una esfera con una textura.
+### 🎮 Interactive Controls
 
-Each particle is drawn as a texturized sphere. Texture file is ```football.png``` 
-located in ```resources``` folder.
+#### Camera Controls (First Person)
+| Key | Action |
+|-----|--------|
+| `W` | Move forward |
+| `A` | Move left |
+| `S` | Move backward |
+| `D` | Move right |
+| `SPACE` | Move up |
+| `LEFT CTRL` | Move down |
+| `LEFT SHIFT` | Speed boost (4x) |
+| `Left Mouse Button` | Look around (hold and move mouse) |
+| `T` | Reset camera position |
 
-## Debe existir unas particulas especiales con masa distinta al resto, y se debe poder controlar la cantidad de partículas especiales de la simulación, así como la masa especial de dichas partículas.
+#### Simulation Controls
+| Key | Action |
+|-----|--------|
+| `C` | Open/close configuration window |
+| `R` | Reset time step |
+| `I` | Increase time step |
+| `K` | Decrease time step |
+| `ESC` | Exit application |
 
-Pending.
+### 🖥️ Real-time Interface
 
-## Debe existir un control en primera persona de la cámara.
+Press `C` to access the configuration panel with the following controls:
 
-Camera system is implemented using OpenGL, GLFW, and GLM. It supports first-person camera movement and orientation using keyboard and mouse input.
+- **Simulation Speed**: Adjust time step via slider
+- **Number of Bodies**: Control total particle count
+- **Special Bodies**: Set number of special particles
+- **Normal Mass**: Adjust mass of regular particles
+- **Special Mass**: Set mass for special particles
+- **Processing Mode**: Toggle between GPU and CPU computation
+- **Reset**: Restart the simulation with current parameters
 
-| Key                           | Action                       |
-|-------------------------------|------------------------------|
-| `W`                           | Move forward                 |
-| `A`                           | Move left                    |
-| `S`                           | Move backward                |
-| `D`                           | Move right                   |
-| `C`                           | Open Configuration           |
-| `SPACE`                       | Move up                      |
-| `LEFT CONTROL`                | Move down                    |
-| `LEFT SHIFT (pressed)`        | Speed up (x4)                |
-| `Left Mouse Button (pressed)` | Look around (mouse movement) |
-| `R`                           | Reset time step              |
-| `T`                           | Reset camera                 |
-| `I`                           | Increase time step           |
-| `K`                           | Decrease time step           |
-| `Esc`                         | Exit                         |
+## Technical Implementation
 
-* Debe existir una interfaz que permita al usuario cambiar los parámetros de la simulación
-en tiempo real, como la velocidad de la simulación, el número de cuerpos, la masa general
-de los cuerpos y si se procesa la lógica en la CPU o en la GPU.
+### Core Components
+- **Body Class**: Particle representation with GLM vec3 position/velocity vectors
+- **Light Source**: Single light positioned at (0.5, 0.5, 0.5)
+- **Texture System**: Football texture applied to all particle spheres
 
-* Interface: press ```c``` to open and close configuration window.
-* Simulation speed: Adjust "time step" slider
-* Number of bodies:
-* masa general
-* GPU/CPU:
+### Current Status
+✅ **Completed Features:**
+- 3D particle simulation
+- CUDA-OpenGL interoperability
+- First-person camera system
+- Real-time parameter adjustment
+- Textured spherical particles
+- Basic lighting system
 
-* La interfaz se debe activar con una tecla y desactivar con la misma para facilitar el manejo
-de la cámara
+⏳ **Pending Features:**
+- Variable particle colors
+- Spherical light source (currently cubic)
 
-Press ```c``` to open and close configuration window.
+## File Structure
+```
+├── src/
+│   ├── shaders/          # Vertex and fragment shaders
+│   └── ...              # Source code files
+├── resources/
+│   └── football.png     # Particle texture
+├── build/               # Build directory (created during compilation)
+└── README.md           # This file
+```
