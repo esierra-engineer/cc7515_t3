@@ -14,11 +14,11 @@ class Body {
 public:
     glm::vec3 posVec;
     glm::vec3 velVec;
-    float mass;
+    bool special = false;
 };
 
 void simulateNBodyCPU(Body* bodies, int n, int steps, float dt = 0.01f);
-void simulateNBodyCUDA(Body* h_bodies, const char* kernelFilename, int localSize, int n, float dt=1.0/60.0);
-void generateRandomBodies(Body* bodies, int n, float mass = 1e10f);
+void simulateNBodyCUDA(Body* h_bodies, const char* kernelFilename, int localSize, int n, float dt, float* mass);
+void generateRandomBodies(Body* bodies, int n);
 
 #endif

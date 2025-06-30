@@ -13,7 +13,7 @@
 // universal gravitational constant
 const float G = G_CONSTANT;
 
-extern "C" __global__ void updateBodies(Body *bodies, int n, float dt = 0.01f) {
+extern "C" __global__ void updateBodies(Body *bodies, int n, float dt, float mass) {
     // i is the body index (global thread index),
     // each thread handles ONE BODY
     int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x * blockDim.y +
@@ -54,7 +54,7 @@ extern "C" __global__ void updateBodies(Body *bodies, int n, float dt = 0.01f) {
             // inverse of the distance
             float invDist = rsqrtf(distSqr);
 
-            F = G * bi.mass * bj.mass * powf(invDist, 3.0f);
+            F = G * mass * mass * powf(invDist, 3.0f);
         }
 
         // update net force over body for x,y,z
@@ -69,9 +69,9 @@ extern "C" __global__ void updateBodies(Body *bodies, int n, float dt = 0.01f) {
      * then (dv = F * dt / m)
      * then v = v + dv
      * **/
-    bi.velVec.x += Fx / bi.mass * dt;
-    bi.velVec.y += Fy / bi.mass * dt;
-    bi.velVec.z += Fz / bi.mass * dt;
+    bi.velVec.x += Fx / mass * dt;
+    bi.velVec.y += Fy / mass * dt;
+    bi.velVec.z += Fz / mass * dt;
 
     /** update position
      * v = dx/dt

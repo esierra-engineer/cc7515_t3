@@ -234,7 +234,7 @@ int main()
 	// create Bodies vector
 	bodies = new Body[DEFAULT_N_BODIES];
 	// give random positions
-	generateRandomBodies(bodies, DEFAULT_N_BODIES, DEFAULT_MASS);
+	generateRandomBodies(bodies, DEFAULT_N_BODIES);
 
 	// Main while loop
 	while (!glfwWindowShouldClose(window))
@@ -286,7 +286,7 @@ int main()
 			ImGui::SliderFloat("Special Mass (e+10)", &sm, 1, 1000.0f, "%.1f");
 			if (ImGui::Button("Reset")) {
 				float mass = m * DEFAULT_MASS;
-				generateRandomBodies(bodies, numBodies, mass);
+				generateRandomBodies(bodies, numBodies);
 				showConf = !showConf;
 			}
 			ImGui::End();
@@ -301,7 +301,7 @@ int main()
 		cudaGraphicsMapResources(1, &cudaVBO);
 		cudaGraphicsResourceGetMappedPointer(reinterpret_cast<void **>(&devicePtr), &size, cudaVBO);
 		// update positions
-		simulateNBodyCUDA(bodies, kernel_filename.c_str(), local_size, numBodies, dt);
+		simulateNBodyCUDA(bodies, kernel_filename.c_str(), local_size, numBodies, dt, &m);
 		// unmap resources
 		cudaGraphicsUnmapResources(1, &cudaVBO);
 
