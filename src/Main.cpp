@@ -29,20 +29,21 @@ namespace fs = std::filesystem;
 #include "imgui_impl_opengl3.h"
 
 #define DEFAULT_DT 0.01f
+#define DEFAULT_N_BODIES 1024
 
 const unsigned int width = 800;
 const unsigned int height = 800;
 constexpr auto camera_init_pos = glm::vec3(0.0f, 0.0f, 120.0f);
-const unsigned int Nbodies = 100;
+Body* bodies;
+int Nbodies = DEFAULT_N_BODIES;
 const double scale = 1.1;
 float dt = DEFAULT_DT;
+float m, sm = 1.0;
+int i = 1;
 
 // root folder path
 fs::path src_folder = "/media/storage/git/cc7515_t3/src/shaders";
 fs::path resources_folder = "/media/storage/git/cc7515_t3/resources";
-
-// GLfloat* lightVertices = sphereVertices;
-// GLuint* lightIndices = sphereIndices;
 
 GLfloat lightVertices[] =
 { //     COORDINATES     //
@@ -73,26 +74,26 @@ GLuint lightIndices[] =
 };
 
 
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+void key_callback(GLFWwindow* window)
 {
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
 		std::cout << "Closing...";
 		glfwSetWindowShouldClose(window, true);
 	}
 
-	if (key == GLFW_KEY_I && action == GLFW_PRESS) {
+	if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) {
 		std::cout << "Increasing time step to ";
 		dt += 0.01;
 		std::cout << dt << "\n";
 	}
 
-	if (key == GLFW_KEY_K && action == GLFW_PRESS) {
+	if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) {
 		std::cout << "Decreasing time step to ";
 		if (dt >= 0.01) dt -= 0.01;
 		std::cout << dt << "\n";
 	}
 
-	if (key == GLFW_KEY_R && action == GLFW_PRESS) {
+	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
 		std::cout << "Defaulting time step to ";
 		dt = DEFAULT_DT;
 		std::cout << dt << "\n";
@@ -100,7 +101,12 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 }
 
 
+bool showConf = true;
+void processInput(GLFWwindow* window, Camera* camera);
+
 void drawSpheres(Body* bodies, const Shader& shaderProgram, int N);
+
+void showConfWindow();
 
 int main()
 {
@@ -214,7 +220,7 @@ int main()
 	Camera camera(width, height, camera_init_pos);
 
 	// create Bodies vector
-	Body* bodies = new Body[Nbodies];
+	bodies = new Body[Nbodies];
 	// give random positions
 	generateRandomBodies(bodies, Nbodies);
 
@@ -240,19 +246,11 @@ int main()
 	// Main while loop
 	while (!glfwWindowShouldClose(window))
 	{
-		// Start the Dear ImGui frame
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
-		ImGui::ShowDemoWindow(); // Show demo window! :)
-
 		// Specify the color of the background
 		glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
 		// Clean the back buffer and depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// Handles camera inputs
-		camera.Inputs(window);
 		// Updates and exports the camera matrix to the Vertex Shader
 		camera.updateMatrix(45.0f, 0.1f, 100.0f);
 
@@ -267,13 +265,6 @@ int main()
 		brickTex.Bind();
 		// Bind the VAO so OpenGL knows to use it
 		VAO1.Bind();
-		// CUDA interop
-		Body* devicePtr;
-		size_t size;
-		cudaGraphicsMapResources(1, &cudaVBO);
-		cudaGraphicsResourceGetMappedPointer(reinterpret_cast<void **>(&devicePtr), &size, cudaVBO);
-		// update positions
-		simulateNBodyCUDA(bodies, kernel_filename.c_str(), local_size, Nbodies, dt);
 
 		cudaGraphicsUnmapResources(1, &cudaVBO);
 		// Draw primitives, number of indices, datatype of indices, index of indices
@@ -288,14 +279,39 @@ int main()
 		// Draw primitives, number of indices, datatype of indices, index of indices
 		glDrawElements(GL_TRIANGLES, sizeof(lightIndices) / sizeof(int), GL_UNSIGNED_INT, 0);
 
+
 		// Window Test
-		ImGui::ShowDemoWindow();
+		// Start the Dear ImGui frame
+		if (showConf) {
+			ImGui_ImplOpenGL3_NewFrame();
+			ImGui_ImplGlfw_NewFrame();
+			ImGui::NewFrame();
+
+			ImGui::Begin("Configuration");
+			// ImGui::Text("Hello, world %d", 123);
+			if (ImGui::Button("Save")) {
+
+			}
+			ImGui::SliderFloat("Time Step", &dt, DEFAULT_DT, 1.0f);
+			ImGui::SliderInt("Bodies", &i, 1, DEFAULT_N_BODIES);
+			ImGui::SliderFloat("Normal Mass (e+10)", &m, 1, 10.0f, "%.1f");
+			ImGui::SliderFloat("Special Mass (e+10)", &sm, 1, 10.0f, "%.1f");
+			ImGui::End();
+
+			// CUDA interop
+			Body* devicePtr;
+			size_t size;
+			cudaGraphicsMapResources(1, &cudaVBO);
+			cudaGraphicsResourceGetMappedPointer(reinterpret_cast<void **>(&devicePtr), &size, cudaVBO);
+			// update positions
+			simulateNBodyCUDA(bodies, kernel_filename.c_str(), local_size, Nbodies, dt);
+
+			ImGui::Render();
+			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		}
 
 		// listen to key events
-		glfwSetKeyCallback(window, key_callback);
-
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		processInput(window, &camera);
 
 		// Swap the back buffer with the front buffer
 		glfwSwapBuffers(window);
@@ -317,12 +333,13 @@ int main()
 	glfwDestroyWindow(window);
 	// Terminate GLFW before ending the program
 	glfwTerminate();
-	//
+	// imgui
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
 	return 0;
 }
+
 
 void drawSpheres(Body* bodies, const Shader& shaderProgram, int N) {
 	for (int i = 0; i < N; ++i) {
@@ -353,9 +370,18 @@ void drawSpheres(Body* bodies, const Shader& shaderProgram, int N) {
 		}
 
 		model = glm::translate(model, newPos);
-		model = glm::scale(model, glm::vec3(scale, scale, scale));
+		model = glm::scale(model, glm::vec3(scale));
 
 		glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
 		glDrawElements(GL_TRIANGLES, sizeof(sphereIndices) / sizeof(GLuint), GL_UNSIGNED_INT, nullptr);
 	}
+}
+
+void processInput(GLFWwindow* window, Camera* camera) {
+	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
+		std::cout << (showConf ? "Closing" : "Opening") << " conf. Window... \n";
+		showConf = !showConf;;
+	}
+	if (!showConf) camera->Inputs(window);
+	key_callback(window);
 }
