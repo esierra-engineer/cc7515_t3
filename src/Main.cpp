@@ -30,17 +30,19 @@ namespace fs = std::filesystem;
 
 #define DEFAULT_DT 0.01f
 #define DEFAULT_N_BODIES 1024
+#define DEFAULT_N_SPECIAL_BODIES 0
 #define SHOW_CONF_AT_START false
 
 const unsigned int width = 800;
 const unsigned int height = 800;
 constexpr auto camera_init_pos = glm::vec3(0.0f, 0.0f, 120.0f);
 Body* bodies;
-const double scale = 1.1;
+const double scale = 1.0;
 float dt = DEFAULT_DT;
-float sm, m;
+float sm = 1.0;
+float m = 1.0;
 int numBodies = DEFAULT_N_BODIES;
-int specialBodies = 0;
+int specialBodies = DEFAULT_N_SPECIAL_BODIES;
 std::string kernel_filename = "kernel.ptx";
 int local_size = 32;
 
@@ -231,9 +233,10 @@ int main()
 	ImGui_ImplOpenGL3_Init();
 
 	// create Bodies vector
-	bodies = new Body[DEFAULT_N_BODIES];
+	bodies = new Body[DEFAULT_N_BODIES + DEFAULT_N_BODIES];
 	// give random positions
-	generateRandomBodies(bodies, DEFAULT_N_BODIES);
+	generateRandomBodies(bodies, DEFAULT_N_BODIES, DEFAULT_N_SPECIAL_BODIES);
+
 
 	// Main while loop
 	while (!glfwWindowShouldClose(window))
@@ -257,7 +260,7 @@ int main()
 		// Bind the VAO so OpenGL knows to use it
 		VAO1.Bind();
 		// Draw primitives, number of indices, datatype of indices, index of indices
-		drawSpheres(bodies, shaderProgram, numBodies);
+		drawSpheres(bodies, shaderProgram, numBodies + specialBodies);
 
 		// Tells OpenGL which Shader Program we want to use
 		lightShader.Activate();
@@ -280,11 +283,11 @@ int main()
 			// ImGui::Text("Hello, world %d", 123);
 			ImGui::SliderFloat("Time Step", &dt, DEFAULT_DT, 1.0f);
 			ImGui::SliderInt("Bodies", &numBodies, 1, DEFAULT_N_BODIES);
-			ImGui::SliderInt("Special Bodies", &specialBodies, 0, DEFAULT_N_BODIES);
+			ImGui::SliderInt("Special Bodies", &specialBodies, 1, DEFAULT_N_BODIES);
 			ImGui::SliderFloat("Normal Mass (e+9)", &m, 1, 1e3f, "%.0f");
 			ImGui::SliderFloat("Special Mass (e+9)", &sm, 1, 1e3f, "%.0f");
 			if (ImGui::Button("Reset")) {
-				generateRandomBodies(bodies, numBodies);
+				generateRandomBodies(bodies, numBodies, specialBodies);
 				showConf = !showConf;
 			}
 			ImGui::End();
@@ -299,7 +302,7 @@ int main()
 		cudaGraphicsMapResources(1, &cudaVBO);
 		cudaGraphicsResourceGetMappedPointer(reinterpret_cast<void **>(&devicePtr), &size, cudaVBO);
 		// update positions
-		simulateNBodyCUDA(bodies, kernel_filename.c_str(), local_size, numBodies, dt, &m, &sm);
+		simulateNBodyCUDA(bodies, kernel_filename.c_str(), local_size, numBodies + specialBodies, dt, &m, &sm);
 		// unmap resources
 		cudaGraphicsUnmapResources(1, &cudaVBO);
 

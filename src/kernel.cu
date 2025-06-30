@@ -54,7 +54,8 @@ extern "C" __global__ void updateBodies(Body *bodies, int n, float dt, float mas
             // inverse of the distance
             float invDist = rsqrtf(distSqr);
 
-            F = G * mass * mass * powf(invDist, 3.0f);
+            // F = G * m1 * m2 / ...
+            F = G * (bi.special ? special_mass : mass) * (bj.special ? special_mass : mass) * powf(invDist, 3.0f);
         }
 
         // update net force over body for x,y,z

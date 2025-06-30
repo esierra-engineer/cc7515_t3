@@ -5,7 +5,7 @@
 #include <cuda_runtime.h>
 #include "utils.h"
 #include <iostream>
-#define DEFAULT_MASS 1e10f
+#define DEFAULT_MASS 1e9f
 
 /**
  * Host Function (CPU-side)

@@ -17,7 +17,7 @@ void check(CUresult err, const char* func, const char* file, int line) {
     }
 }
 
-void generateRandomBodies(Body* bodies, int n) {
+void generateRandomBodies(Body* bodies, int n, int n_specials) {
 #define FACTOR 30.0f
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -25,6 +25,12 @@ void generateRandomBodies(Body* bodies, int n) {
     for (int i = 0; i < n; ++i) {
         bodies[i].posVec = glm::vec3(dist(gen), dist(gen), dist(gen));
         bodies[i].velVec = glm::vec3(0.0f);
+        bodies[i].special = false;
+    }
+    for (int i = n; i < n + n_specials; ++i) {
+        bodies[i].posVec = glm::vec3(dist(gen), dist(gen), dist(gen));
+        bodies[i].velVec = glm::vec3(0.0f);
+        bodies[i].special = true;
     }
 
 }
