@@ -18,7 +18,7 @@ public:
 };
 
 void simulateNBodyCPU(Body* bodies, int n, int steps, float dt = 0.01f);
-void simulateNBodyCUDA(Body* h_bodies, const char* kernelFilename, int localSize, int n, float dt, float* mass);
+void simulateNBodyCUDA(Body* h_bodies, const char* kernelFilename, int localSize, int n, float dt, float* mass, float* special_mass);
 void generateRandomBodies(Body* bodies, int n);
 
 #endif

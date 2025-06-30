@@ -30,7 +30,6 @@ namespace fs = std::filesystem;
 
 #define DEFAULT_DT 0.01f
 #define DEFAULT_N_BODIES 1024
-#define DEFAULT_MASS 1e10f
 #define SHOW_CONF_AT_START false
 
 const unsigned int width = 800;
@@ -282,10 +281,9 @@ int main()
 			ImGui::SliderFloat("Time Step", &dt, DEFAULT_DT, 1.0f);
 			ImGui::SliderInt("Bodies", &numBodies, 1, DEFAULT_N_BODIES);
 			ImGui::SliderInt("Special Bodies", &specialBodies, 0, DEFAULT_N_BODIES);
-			ImGui::SliderFloat("Normal Mass (e+10)", &m, 1, 1000.0f, "%.1f");
-			ImGui::SliderFloat("Special Mass (e+10)", &sm, 1, 1000.0f, "%.1f");
+			ImGui::SliderFloat("Normal Mass (e+9)", &m, 1, 1e3f, "%.0f");
+			ImGui::SliderFloat("Special Mass (e+9)", &sm, 1, 1e3f, "%.0f");
 			if (ImGui::Button("Reset")) {
-				float mass = m * DEFAULT_MASS;
 				generateRandomBodies(bodies, numBodies);
 				showConf = !showConf;
 			}
@@ -301,7 +299,7 @@ int main()
 		cudaGraphicsMapResources(1, &cudaVBO);
 		cudaGraphicsResourceGetMappedPointer(reinterpret_cast<void **>(&devicePtr), &size, cudaVBO);
 		// update positions
-		simulateNBodyCUDA(bodies, kernel_filename.c_str(), local_size, numBodies, dt, &m);
+		simulateNBodyCUDA(bodies, kernel_filename.c_str(), local_size, numBodies, dt, &m, &sm);
 		// unmap resources
 		cudaGraphicsUnmapResources(1, &cudaVBO);
 

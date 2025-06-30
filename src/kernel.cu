@@ -13,7 +13,7 @@
 // universal gravitational constant
 const float G = G_CONSTANT;
 
-extern "C" __global__ void updateBodies(Body *bodies, int n, float dt, float mass) {
+extern "C" __global__ void updateBodies(Body *bodies, int n, float dt, float mass, float special_mass) {
     // i is the body index (global thread index),
     // each thread handles ONE BODY
     int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x * blockDim.y +

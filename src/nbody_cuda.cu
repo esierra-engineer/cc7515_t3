@@ -5,6 +5,7 @@
 #include <cuda_runtime.h>
 #include "utils.h"
 #include <iostream>
+#define DEFAULT_MASS 1e10f
 
 /**
  * Host Function (CPU-side)
@@ -18,8 +19,10 @@
  * @param localSize Block size
  * @param n Number of bodies
  */
-void simulateNBodyCUDA(Body* h_bodies, const char* kernelFilename, int localSize, int n, float dt, float* mass) {
-    float deref_mass = *mass * 1e9f;
+void simulateNBodyCUDA(Body* h_bodies, const char* kernelFilename, int localSize, int n, float dt, float* mass, float* special_mass) {
+    float deref_mass = *mass * DEFAULT_MASS;
+    float deref__special_mass = *special_mass * DEFAULT_MASS;
+
     // destination memory address pointer
     Body* d_bodies;
     // in memory size of n bodies
@@ -50,7 +53,8 @@ void simulateNBodyCUDA(Body* h_bodies, const char* kernelFilename, int localSize
         (void*) &d_bodies,
         (void*) &n,
         (void*) &dt,
-        (void*) &deref_mass
+        (void*) &deref_mass,
+        (void*) &deref__special_mass
     };
 
     checkCudaErrors(
