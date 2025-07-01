@@ -56,52 +56,117 @@ El cálculo de F representa la ecuación vectorial de la ley de gravitación uni
 
 $$ \vec{F}_{21} = - G \cdot \frac{m_1 \cdot m_2}{|\vec{d}_{21}|^3}\vec{d}_{21}$$
 
-# Algoritmo secuencial
-
-```c++
-for (int i = 0; i < n; ++i) {
-    for (int j = 0; j < n; ++j) {
-        if (i == j) continue;
-        // dx, dy, dz = distancia entre bi y bj
-        // distancia euclidiana
-        distSqr = dx * dx + dy * dy + dz * dz + NEAR_ZERO;
-        // recíproco de la distancia
-        invDist = rsqrtf(distSqr);
-        float bi mass = (bi.special ? *special_mass : *mass);
-        float bj mass = (bj.special ? *special_mass : *mass); 
-        // cálculo de F
-```
-
-# Algoritmo paralelo
-Se define un kernel que realiza el cálculo de la fuerza neta sobre una partícula 
-utilizando la misma idea del algoritmo secuencial. Utilizando CUDA, primero se copian 
-los datos al dispositivo. Luego se lanza el kernel y se transfieren los datos de vuelta.
-
-```c++
-extern "C" __global__ void updateBodies(...) {
-    // cada thread maneja una partícula
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    // cálculo de F ...
-}
-cudaDeviceSynchronize();
-// recuperar las posiciones y velocidades actualizadas
-cudaMemcpy(h_bodies, d_bodies, size, cudaMemcpyDeviceToHost);
-// liberar memoria
-cudaFree(d_bodies);
-cuCtxDestroy(context);
-```
 # Renderizado
+
 ```c++
-int main()
-GLFWwindow* window = glfwCreateWindow(width, height, "CC7515 Tarea 3", NULL, NULL);
+// creación de ventana
+GLFWwindow* window = glfwCreateWindow(...);
+// activar eventos de teclado
 glfwSetKeyCallback(window, key_callback);
-	// Generates Shader object using shaders default.vert and default.frag
-	// Generates Vertex Array Object and binds it
-	// Generates Vertex Buffer Object and links it to vertices
-	// Generates Element Buffer Object and links it to indices
-	// Links VBO attributes such as coordinates and colors to VAO
-	Texture brickTex(texture_path.c_str(), GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
-	brickTex.texUnit(shaderProgram, "tex0", 0);
-while (!glfwWindowShouldClose(window))
+// Generar shaders, VAO, VBO y EBO y enlazarlo a los vertices
+// ...
+// Cargar texturas
+Texture brickTex(texture_path.c_str(), GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
+brickTex.texUnit(shaderProgram, "tex0", 0);
+// render loop
+while (!glfwWindowShouldClose(window)){
+    // Dibujar esferas
+    int n = numBodies + specialBodies;
+    drawSpheres(bodies, shaderProgram, n);
 
 ```
+
+# Renderizado
+
+El método ```drawSpheres(bodies, shaderProgram, n)``` dibuja en pantalla ```n``` esferas
+del arreglo ```bodies``` en su respectiva posición utilizando el 
+*vertex shader* y el *fragment shader*.
+
+```c++
+void drawSpheres(bodies, shaderProgram, N) {
+// para cada partìcula
+for (int i = 0; i < N; ++i) {
+    // lee la posiciòn
+    glm::vec3 newPos = bodies[i].posVec;
+    // inicializar render de la partìcula en el origen
+    glm::mat4 model = glm::mat4(1.0f);
+    // trasladar a la posición leìda
+    model = glm::translate(model, newPos);
+    // dibujar en pantalla
+    glDrawElements(GL_TRIANGLES, ...);
+```
+
+# Shaders
+Se utilizan vertex shader y fragment shader para las partículas y para la fuente
+de iluminación.
+
+## Iluminación
+### Vertex shader
+Se define el layout como un vector de tres dimensiones que representan la posición.
+También se lee el modelo y la matriz de la cámara como uniform.
+
+La salida gl_Position se calcula como:
+```glsl
+gl_Position = camMatrix * model * vec4(aPos, 1.0f);
+```
+
+### Fragment shader
+La salida corresponde al color del vértice, se lee como uniform el color
+de la iluminación lightColor. La salida corresponde a lightColor.
+```glsl
+out vec4 FragColor;
+FragColor = lightColor;
+```
+
+# Shaders - Partículas
+## Vertex shader
+### Pipeline de Transformación
+```
+Vértices → Transformación → Interpolación → Fragment Shader
+```
+
+### Entradas y Proceso
+- **Atributos**: Posición, Color, Posición Textura, Normales
+- **Uniforms**: Matriz cámara (`camMatrix`) + Matriz modelo (`model`)
+- **Transformación**: `gl_Position = camMatrix * model * vertex`
+
+### Salidas 
+- Posición mundial (`crntPos`)
+- Color, coordenadas de textura y normales
+
+# Shaders - Partículas
+## Fragment shader
+### Modelo de Iluminación Phong
+
+| Componente | Fórmula                            | Efecto |
+|------------|------------------------------------|---------|
+| **Ambiente** | `0.20f`                            | Luz base constante |
+| **Difusa** | `max(dot(normal, lightDir), 0)`    | Iluminación direccional |
+| **Especular** | `pow(dot(viewDir, reflectDir), 8)` | Reflejos brillantes |
+
+### Resultado Final
+```glsl
+FragColor = texture(tex0, texCoord) * lightColor * 
+            (ambient + diffuse + specular)
+```
+
+**Combina**: Textura del objeto + Color de luz + Iluminación realista
+
+# Interoperabilidad
+
+```c++
+cudaGraphicsResource_t cudaVBO;
+// establecer conexiòn entre OpenGL y CUDA
+cudaGraphicsGLRegisterBuffer(&cudaVBO, VBO1.ID, ...);
+// dentro del render loop
+    Body* devicePtr;
+    size_t size;
+    // mapear hacia un puntero CUDA
+    cudaGraphicsMapResources(1, &cudaVBO);
+    // obtener puntero mapeado a OpenGL
+    cudaGraphicsResourceGetMappedPointer(..., cudaVBO);
+    simulateNBodyCUDA(...);
+    // Liberar recursos
+    cudaGraphicsUnmapResources(1, &cudaVBO);
+```
+Fuente: [https://docs.nvidia.com/cuda/cuda-runtime-api](https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__INTEROP.html#group__CUDART__INTEROP)
