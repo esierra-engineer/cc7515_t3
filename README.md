@@ -44,6 +44,87 @@ Seamless integration between CUDA compute kernels and OpenGL rendering pipeline 
 - **Textured Particles**: Spherical particles with football texture (`resources/football.png`)
 - **Shaders**: Custom vertex and fragment shaders located in `src/shaders/`
 
+This project includes GLSL shaders used for a 3D N-body simulation. There are two shader programs:
+
+1. **Default Shader** – used for rendering the particles (spheres) with lighting and texture.
+2. **Light Shader** – used for rendering the light source (a cube or sphere).
+
+---
+
+#### 1. `default.vert` – Vertex Shader (Particles)
+
+##### Inputs:
+- `layout (location = 0) in vec3 aPos`: Vertex position.
+- `layout (location = 1) in vec3 aNormal`: Vertex normal.
+- `layout (location = 2) in vec2 aTex`: Texture coordinate.
+
+##### Uniforms:
+- `mat4 model`: Model transformation matrix.
+- `mat4 camMatrix`: Combined view-projection matrix.
+
+##### Outputs:
+- `vec3 FragPos`: World-space position of the vertex.
+- `vec3 Normal`: Transformed normal vector.
+- `vec2 TexCoord`: Passed-through texture coordinate.
+
+##### Function:
+This shader transforms vertex positions to clip space and calculates world-space normals and positions for lighting in the fragment shader.
+
+---
+
+#### 2. `default.frag` – Fragment Shader (Particles)
+
+##### Inputs:
+- `vec3 FragPos`: From vertex shader, world-space position.
+- `vec3 Normal`: From vertex shader, transformed normal.
+- `vec2 TexCoord`: Texture coordinate.
+
+##### Uniforms:
+- `sampler2D tex0`: The texture applied to the particle.
+- `vec3 lightPos`: Position of the light source.
+- `vec3 viewPos`: Position of the camera.
+
+##### Output:
+- `vec4 FragColor`: Final color of the fragment.
+
+##### Function:
+Implements Phong lighting model:
+- **Ambient** lighting.
+- **Diffuse** reflection (based on Lambert's cosine law).
+- **Specular** reflection (using Blinn-Phong model).
+
+The final fragment color is the combination of these lighting components modulated by the texture color.
+
+---
+
+#### 3. `light.frag` – Fragment Shader (Light Source)
+
+##### Output:
+- `vec4 FragColor`: Light color.
+
+##### Function:
+This shader outputs color to visualize the light source. No lighting calculations are done here.
+
+---
+
+#### 4. `light.vert` – Vertex Shader (Light Source)
+
+##### Inputs:
+- `layout (location = 0) in vec3 aPos`: Vertex position.
+
+##### Uniforms:
+- `mat4 model`: Model transformation matrix for the light.
+- `mat4 camMatrix`: Combined view-projection matrix.
+
+##### Function:
+Transforms the light source geometry into clip space for rendering.
+
+---
+
+#### Notes:
+- Lighting calculations are done per-fragment (pixel), giving smooth shading.
+---
+
 ### ⚙️ Physics Engine
 - **Particle Model**: Based on `Body` class with position, velocity, and mass attributes
 - **Special Particles**: Support for particles with different masses and properties
