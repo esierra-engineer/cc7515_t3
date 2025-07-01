@@ -66,7 +66,7 @@ glfwSetKeyCallback(window, key_callback);
 // Generar shaders, VAO, VBO y EBO y enlazarlo a los vertices
 // ...
 // Cargar texturas
-Texture brickTex(texture_path.c_str(), GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
+Texture brickTex(texture_path.c_str(), GL_TEXTURE_2D, ...);
 brickTex.texUnit(shaderProgram, "tex0", 0);
 // render loop
 while (!glfwWindowShouldClose(window)){
