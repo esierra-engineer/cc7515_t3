@@ -49,6 +49,7 @@ float sourceLightColor[4] = {1.0f, 1.0f, 1.0f, 1.0f};
 static int useGPU = 1;
 bool prevRightCtrlState = false;
 bool stop = false;
+bool showConf = SHOW_CONF_AT_START;
 
 GLfloat lightVertices[] =
 { //     COORDINATES     //
@@ -79,41 +80,38 @@ GLuint lightIndices[] =
 };
 
 
-void key_callback(GLFWwindow* window)
-{
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-		std::cout << "Closing...";
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+	if (key == GLFW_KEY_RIGHT_CONTROL && action == GLFW_PRESS) {
+		stop = !stop;
+		std::cout << (stop ? "Pausing" : "Resuming") << " movement\n";
+	}
+
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+		std::cout << "Closing...\n";
 		glfwSetWindowShouldClose(window, true);
 	}
 
-	if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) {
-		std::cout << "Increasing time step to ";
-		dt += 0.01;
-		std::cout << dt << "\n";
+	if (key == GLFW_KEY_I && action == GLFW_PRESS) {
+		dt += 0.01f;
+		std::cout << "Increasing time step to " << dt << "\n";
 	}
 
-	if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) {
-		std::cout << "Decreasing time step to ";
-		if (dt >= 0.01) dt -= 0.01;
-		std::cout << dt << "\n";
+	if (key == GLFW_KEY_K && action == GLFW_PRESS) {
+		if (dt >= 0.01f) dt -= 0.01f;
+		std::cout << "Decreasing time step to " << dt << "\n";
 	}
 
-	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
-		std::cout << "Defaulting time step to ";
+	if (key == GLFW_KEY_R && action == GLFW_PRESS) {
 		dt = DEFAULT_DT;
-		std::cout << dt << "\n";
+		std::cout << "Resetting time step to " << dt << "\n";
 	}
 
-	bool rightCtrlPressed = glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS;
-
-	if (rightCtrlPressed && !prevRightCtrlState) {
-		std::cout << (stop ? "Resuming" : "Pausing") << " movement \n";
-		stop = !stop;
+	if (key == GLFW_KEY_C && action == GLFW_PRESS) {
+		std::cout << (showConf ? "Closing" : "Opening") << " conf. Window... \n";
+		showConf = !showConf;
 	}
-	prevRightCtrlState = rightCtrlPressed;
 }
 
-bool showConf = SHOW_CONF_AT_START;
 void processInput(GLFWwindow* window, Camera* camera);
 
 void drawSpheres(Body* bodies, const Shader& shaderProgram, int N);
@@ -122,7 +120,6 @@ void showConfWindow();
 
 int main()
 {
-	sm = m = 1.0f;
 	// Initialize GLFW
 	glfwInit();
 
@@ -143,6 +140,8 @@ int main()
 		glfwTerminate();
 		return -1;
 	}
+	//
+	glfwSetKeyCallback(window, key_callback);
 	// Introduce the window into the current context
 	glfwMakeContextCurrent(window);
 
@@ -397,10 +396,5 @@ void drawSpheres(Body* bodies, const Shader& shaderProgram, int N) {
 }
 
 void processInput(GLFWwindow* window, Camera* camera) {
-	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS) {
-		std::cout << (showConf ? "Closing" : "Opening") << " conf. Window... \n";
-		showConf = !showConf;;
-	}
 	if (!showConf) camera->Inputs(window);
-	key_callback(window);
 }
