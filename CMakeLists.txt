@@ -58,6 +58,7 @@ set(SOURCES
         ${CMAKE_SOURCE_DIR}/src/VBO.cpp
         ${CMAKE_SOURCE_DIR}/src/utils.cpp
         ${CMAKE_SOURCE_DIR}/src/nbody_cuda.cu
+        ${CMAKE_SOURCE_DIR}/src/nbody_cpu.cpp
 )
 
 add_executable(CC7515_T3

@@ -45,6 +45,8 @@ int numBodies = DEFAULT_N_BODIES;
 int specialBodies = DEFAULT_N_SPECIAL_BODIES;
 std::string kernel_filename = "kernel.ptx";
 int local_size = 32;
+float sourceLightColor[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+static int useGPU = 1;
 
 
 GLfloat lightVertices[] =
@@ -185,7 +187,7 @@ int main()
 	lightVBO.Unbind();
 	lightEBO.Unbind();
 
-	glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+
 	glm::vec3 lightPos = glm::vec3(0.5f, 0.5f, 0.5f);
 	glm::mat4 lightModel = glm::mat4(1.0f);
 	lightModel = glm::translate(lightModel, lightPos);
@@ -194,13 +196,11 @@ int main()
 	glm::mat4 sphereModel = glm::mat4(1.0f);
 	sphereModel = glm::translate(sphereModel, spherePos);
 
-
 	lightShader.Activate();
 	glUniformMatrix4fv(glGetUniformLocation(lightShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(lightModel));
-	glUniform4f(glGetUniformLocation(lightShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
+
 	shaderProgram.Activate();
 	glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(sphereModel));
-	glUniform4f(glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
 	glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
 
 	// Texture
@@ -249,10 +249,13 @@ int main()
 		// Updates and exports the camera matrix to the Vertex Shader
 		camera.updateMatrix(45.0f, 0.1f, 100.0f);
 
+		// light color
+		glm::vec4 lightColor = glm::vec4(sourceLightColor[0], sourceLightColor[1], sourceLightColor[2], sourceLightColor[3]);
 		// Tells OpenGL which Shader Program we want to use
 		shaderProgram.Activate();
 		// Exports the camera Position to the Fragment Shader for specular lighting
 		glUniform3f(glGetUniformLocation(shaderProgram.ID, "camPos"), camera.Position.x, camera.Position.y, camera.Position.z);
+		glUniform4f(glGetUniformLocation(shaderProgram.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
 		// Export the camMatrix to the Vertex Shader of the pyramid
 		camera.Matrix(shaderProgram, "camMatrix");
 		// Binds texture so that is appears in rendering
@@ -264,6 +267,7 @@ int main()
 
 		// Tells OpenGL which Shader Program we want to use
 		lightShader.Activate();
+		glUniform4f(glGetUniformLocation(lightShader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, lightColor.w);
 		// Export the camMatrix to the Vertex Shader of the light cube
 		camera.Matrix(lightShader, "camMatrix");
 		// Bind the VAO so OpenGL knows to use it
@@ -279,13 +283,19 @@ int main()
 			ImGui_ImplGlfw_NewFrame();
 			ImGui::NewFrame();
 
+			//ImGui::ShowDemoWindow();
 			ImGui::Begin("Configuration");
-			// ImGui::Text("Hello, world %d", 123);
+			ImGui::Text("Simulation Engine");
+			ImGui::RadioButton("GPU", &useGPU, 1);
+			ImGui::SameLine();
+			ImGui::RadioButton("CPU", &useGPU, 0);
+
 			ImGui::SliderFloat("Time Step", &dt, DEFAULT_DT, 1.0f);
 			ImGui::SliderInt("Bodies", &numBodies, 1, DEFAULT_N_BODIES);
 			ImGui::SliderInt("Special Bodies", &specialBodies, 1, DEFAULT_N_BODIES);
 			ImGui::SliderFloat("Normal Mass (e+9)", &m, 1, 1e3f, "%.0f");
 			ImGui::SliderFloat("Special Mass (e+9)", &sm, 1, 1e3f, "%.0f");
+			ImGui::ColorEdit4("Light Color", sourceLightColor);
 			if (ImGui::Button("Reset")) {
 				generateRandomBodies(bodies, numBodies, specialBodies);
 				showConf = !showConf;
@@ -296,15 +306,19 @@ int main()
 			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		}
 
-		// CUDA interop
-		Body* devicePtr;
-		size_t size;
-		cudaGraphicsMapResources(1, &cudaVBO);
-		cudaGraphicsResourceGetMappedPointer(reinterpret_cast<void **>(&devicePtr), &size, cudaVBO);
 		// update positions
-		simulateNBodyCUDA(bodies, kernel_filename.c_str(), local_size, numBodies + specialBodies, dt, &m, &sm);
-		// unmap resources
-		cudaGraphicsUnmapResources(1, &cudaVBO);
+		if (useGPU) {
+			// CUDA interop
+			Body* devicePtr;
+			size_t size;
+			cudaGraphicsMapResources(1, &cudaVBO);
+			cudaGraphicsResourceGetMappedPointer(reinterpret_cast<void **>(&devicePtr), &size, cudaVBO);
+			simulateNBodyCUDA(bodies, kernel_filename.c_str(), local_size, numBodies + specialBodies, dt, &m, &sm);
+			// unmap resources
+			cudaGraphicsUnmapResources(1, &cudaVBO);
+		} else {
+			simulateNBodyCPU(bodies, numBodies + specialBodies, dt, &m, &sm);
+		}
 
 		// listen to key events
 		processInput(window, &camera);

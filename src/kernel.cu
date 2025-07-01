@@ -16,9 +16,7 @@ const float G = G_CONSTANT;
 extern "C" __global__ void updateBodies(Body *bodies, int n, float dt, float mass, float special_mass) {
     // i is the body index (global thread index),
     // each thread handles ONE BODY
-    int i = (blockIdx.y * gridDim.x + blockIdx.x) * blockDim.x * blockDim.y +
-            threadIdx.y * blockDim.x + threadIdx.x;
-
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
 
     // index can go no longer than the number of bodies
     if (i >= n) return;
@@ -70,9 +68,9 @@ extern "C" __global__ void updateBodies(Body *bodies, int n, float dt, float mas
      * then (dv = F * dt / m)
      * then v = v + dv
      * **/
-    bi.velVec.x += Fx / mass * dt;
-    bi.velVec.y += Fy / mass * dt;
-    bi.velVec.z += Fz / mass * dt;
+    bi.velVec.x += Fx / (bi.special ? special_mass : mass) * dt;
+    bi.velVec.y += Fy / (bi.special ? special_mass : mass) * dt;
+    bi.velVec.z += Fz / (bi.special ? special_mass : mass) * dt;
 
     /** update position
      * v = dx/dt

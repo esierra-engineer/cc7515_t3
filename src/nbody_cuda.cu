@@ -34,13 +34,12 @@ void simulateNBodyCUDA(Body* h_bodies, const char* kernelFilename, int localSize
     // copy data between host and device
     cudaMemcpy(d_bodies, h_bodies, size, cudaMemcpyHostToDevice);
 
-    // configure threads per block
-    dim3 blockDim(localSize / 2, localSize / 2);
-    int totalThreads = n;
+    // 1D Kernel configuration
+    int threadsPerBlock = localSize;
+    int blocksNeeded = (n + threadsPerBlock - 1) / threadsPerBlock;
 
-    int threadsPerBlock = localSize / 2;
-    int blocksNeeded = (totalThreads + threadsPerBlock - 1) / threadsPerBlock;
-    dim3 gridDim((int)ceil(sqrtf(blocksNeeded)), (int)ceil((float)blocksNeeded / sqrtf(blocksNeeded)));
+    dim3 blockDim(threadsPerBlock);
+    dim3 gridDim(blocksNeeded);
 
     size_t sharedMemSize = threadsPerBlock * sizeof(Body);
 
@@ -60,8 +59,8 @@ void simulateNBodyCUDA(Body* h_bodies, const char* kernelFilename, int localSize
     checkCudaErrors(
         cuLaunchKernel(
             kernel,
-            gridDim.x, gridDim.y, 1,                    // grid
-            blockDim.x, blockDim.y, 1,             // block
+            gridDim.x, 1, 1,                    // grid
+            blockDim.x, 1, 1,             // block
             sharedMemSize, nullptr,                        // shared memory and stream
             kernelArgs, nullptr)                // args
         );
