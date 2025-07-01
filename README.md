@@ -77,12 +77,13 @@ Seamless integration between CUDA compute kernels and OpenGL rendering pipeline 
 
 Press `C` to access the configuration panel with the following controls:
 
+- **Processing Mode**: Toggle between GPU and CPU computation
 - **Simulation Speed**: Adjust time step via slider
 - **Number of Bodies**: Control total particle count
 - **Special Bodies**: Set number of special particles
 - **Normal Mass**: Adjust mass of regular particles
 - **Special Mass**: Set mass for special particles
-- **Processing Mode**: Toggle between GPU and CPU computation
+- **Light Color**: Set color for illumination.
 - **Reset**: Restart the simulation with current parameters
 
 ## Technical Implementation
@@ -107,11 +108,17 @@ Press `C` to access the configuration panel with the following controls:
 
 ## File Structure
 ```
+├── include/              # Header code files
+├── Libraries/              # External libraries
+│   ├── include/          
+│   └── lib/              
 ├── src/
 │   ├── shaders/          # Vertex and fragment shaders
 │   └── ...              # Source code files
 ├── resources/
 │   └── football.png     # Particle texture
 ├── build/               # Build directory (created during compilation)
+│
+└── CMakeLists.txt      # cmake configuration file
 └── README.md           # This file
 ```
