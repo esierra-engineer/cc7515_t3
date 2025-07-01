@@ -300,7 +300,7 @@ int main()
 
 			ImGui::SliderFloat("Time Step", &dt, DEFAULT_DT, 1.0f);
 			ImGui::SliderInt("Bodies", &numBodies, 1, DEFAULT_N_BODIES);
-			ImGui::SliderInt("Special Bodies", &specialBodies, 1, DEFAULT_N_BODIES);
+			ImGui::SliderInt("Special Bodies", &specialBodies, 0, DEFAULT_N_BODIES);
 			ImGui::SliderFloat("Normal Mass (e+9)", &m, 1, 1e3f, "%.0f");
 			ImGui::SliderFloat("Special Mass (e+9)", &sm, 1, 1e3f, "%.0f");
 			ImGui::ColorEdit4("Light Color", sourceLightColor);
