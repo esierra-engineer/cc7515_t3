@@ -12,9 +12,9 @@
  */
 class Body {
 public:
-    glm::vec3 posVec;
-    glm::vec3 velVec;
-    bool special = false;
+    glm::vec3 posVec; // position vector (x,y,z)
+    glm::vec3 velVec; // velocity vector (x,y,z)
+    bool special = false; // is special?
 };
 
 void simulateNBodyCPU(Body* bodies, int n, float dt, float *mass, float* special_mass);
