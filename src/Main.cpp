@@ -29,7 +29,7 @@ namespace fs = std::filesystem;
 #include "imgui_impl_opengl3.h"
 
 #define DEFAULT_DT 0.01f
-#define DEFAULT_N_BODIES 1024
+#define DEFAULT_N_BODIES 4096
 #define DEFAULT_N_SPECIAL_BODIES 0
 #define SHOW_CONF_AT_START false
 
