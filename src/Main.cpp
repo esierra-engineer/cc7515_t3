@@ -47,7 +47,8 @@ std::string kernel_filename = "kernel.ptx";
 int local_size = 32;
 float sourceLightColor[4] = {1.0f, 1.0f, 1.0f, 1.0f};
 static int useGPU = 1;
-
+bool prevRightCtrlState = false;
+bool stop = false;
 
 GLfloat lightVertices[] =
 { //     COORDINATES     //
@@ -102,6 +103,14 @@ void key_callback(GLFWwindow* window)
 		dt = DEFAULT_DT;
 		std::cout << dt << "\n";
 	}
+
+	bool rightCtrlPressed = glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS;
+
+	if (rightCtrlPressed && !prevRightCtrlState) {
+		std::cout << (stop ? "Resuming" : "Pausing") << " movement \n";
+		stop = !stop;
+	}
+	prevRightCtrlState = rightCtrlPressed;
 }
 
 bool showConf = SHOW_CONF_AT_START;
@@ -307,7 +316,7 @@ int main()
 		}
 
 		// update positions
-		if (useGPU) {
+		if (useGPU & !stop) {
 			// CUDA interop
 			Body* devicePtr;
 			size_t size;
@@ -316,7 +325,7 @@ int main()
 			simulateNBodyCUDA(bodies, kernel_filename.c_str(), local_size, numBodies + specialBodies, dt, &m, &sm);
 			// unmap resources
 			cudaGraphicsUnmapResources(1, &cudaVBO);
-		} else {
+		} else if (!useGPU & !stop) {
 			simulateNBodyCPU(bodies, numBodies + specialBodies, dt, &m, &sm);
 		}
 

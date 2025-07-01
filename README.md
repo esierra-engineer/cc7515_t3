@@ -65,13 +65,14 @@ Seamless integration between CUDA compute kernels and OpenGL rendering pipeline 
 | `T` | Reset camera position |
 
 #### Simulation Controls
-| Key | Action |
-|-----|--------|
-| `C` | Open/close configuration window |
-| `R` | Reset time step |
-| `I` | Increase time step |
-| `K` | Decrease time step |
-| `ESC` | Exit application |
+| Key          | Action                          |
+|--------------|---------------------------------|
+| `RIGHT CTRL` | Pause/unpause movement          |
+| `C`          | Open/close configuration window |
+| `R`          | Reset time step                 |
+| `I`          | Increase time step              |
+| `K`          | Decrease time step              |
+| `ESC`        | Exit application                |
 
 ### 🖥️ Real-time Interface
 
