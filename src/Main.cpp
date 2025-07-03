@@ -35,7 +35,8 @@ namespace fs = std::filesystem;
 #define DEFAULT_N_SPECIAL_BODIES 0
 #define SHOW_CONF_AT_START false
 #define CONF_JSON_PATH "/media/storage/git/cc7515_t3/src/config.json"
-#define CONF_PARTICLES_PATH "/media/storage/git/cc7515_t3/src/particles.csv"
+#define CONF_READ_FILE false
+
 
 using json = nlohmann::json;
 
@@ -52,6 +53,9 @@ float sourceLightColor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 int useGPU;
 bool prevRightCtrlState;
 bool stop;
+bool read_particles_from_file = CONF_READ_FILE;
+std::string particles_conf_file;
+
 
 Body* bodies;
 int numBodies;
@@ -152,6 +156,8 @@ int main()
 	useGPU = configJson["useGPU"] ? 1 : 0;
 	prevRightCtrlState = configJson["prevRightCtrlState"];
 	stop = configJson["stop"];
+	read_particles_from_file = configJson["read_particles_from_file"];
+	particles_conf_file = configJson["particles_conf_file"];
 
 	// Initialize GLFW
 	glfwInit();
@@ -276,7 +282,7 @@ int main()
 	// create Bodies vector
 	bodies = new Body[DEFAULT_N_BODIES + DEFAULT_N_BODIES];
 	// give random positions
-	generateRandomBodies(bodies, DEFAULT_N_BODIES, DEFAULT_N_SPECIAL_BODIES, true, CONF_PARTICLES_PATH);
+	generateRandomBodies(bodies, DEFAULT_N_BODIES, DEFAULT_N_SPECIAL_BODIES, read_particles_from_file, particles_conf_file);
 
 
 	if (configJson.contains("numBodies"))
@@ -349,7 +355,7 @@ int main()
 			ImGui::SliderFloat("Special Mass (e+9)", &sm, 1, 1e3f, "%.0f");
 			ImGui::ColorEdit4("Light Color", sourceLightColor);
 			if (ImGui::Button("Reset")) {
-				generateRandomBodies(bodies, numBodies, specialBodies, true, CONF_PARTICLES_PATH);
+				generateRandomBodies(bodies, numBodies, specialBodies, read_particles_from_file, particles_conf_file);
 				showConf = !showConf;
 			}
 			ImGui::End();

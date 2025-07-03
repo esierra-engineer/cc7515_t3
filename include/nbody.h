@@ -20,6 +20,6 @@ public:
 
 void simulateNBodyCPU(Body* bodies, int n, float dt, float *mass, float* special_mass);
 void simulateNBodyCUDA(Body* h_bodies, const char* kernelFilename, int localSize, int n, float dt, float* mass, float* special_mass);
-void generateRandomBodies(Body* bodies, int n, int n_specials, bool from_file, char* csv_path);
+void generateRandomBodies(Body* bodies, int n, int n_specials, bool from_file, std::string csv_path);
 
 #endif

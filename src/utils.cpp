@@ -19,7 +19,7 @@ void check(CUresult err, const char* func, const char* file, int line) {
     }
 }
 
-void generateRandomBodies(Body* bodies, int n, int n_specials, bool from_file, char* csv_path) {
+void generateRandomBodies(Body* bodies, int n, int n_specials, bool from_file, std::string csv_path) {
 #define FACTOR 30.0f
     if (from_file) {
         io::CSVReader<8> in(csv_path);

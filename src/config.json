@@ -16,5 +16,7 @@
   "prevRightCtrlState": false,
   "stop": false,
   "numBodies":  3,
-  "specialBodies":  1
+  "specialBodies":  1,
+  "read_particles_from_file": true,
+  "particles_conf_file": "/media/storage/git/cc7515_t3/src/particles.csv"
 }
