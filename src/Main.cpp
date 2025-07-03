@@ -34,7 +34,7 @@ namespace fs = std::filesystem;
 #define DEFAULT_N_BODIES 4096
 #define DEFAULT_N_SPECIAL_BODIES 0
 #define SHOW_CONF_AT_START false
-#define CONF_JSON_PATH "/media/storage/git/cc7515_t3/src/config.json"
+#define CONF_JSON_PATH "/media/storage/git/cc7515_t3/resources/config.json"
 #define CONF_READ_FILE false
 
 

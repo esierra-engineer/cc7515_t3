@@ -1,0 +1,22 @@
+{
+  "width": 1920,
+  "height": 800,
+  "camera_init_pos": {
+    "x": 0.0,
+    "y": 0.0,
+    "z": 36.0
+  },
+  "scale": 0.1,
+  "sm": 3.0e-6,
+  "m": 1.0,
+  "kernel_filename": "kernel.ptx",
+  "local_size": 128,
+  "sourceLightColor": [1.0, 1.0, 1.0, 1.0],
+  "useGPU": true,
+  "prevRightCtrlState": false,
+  "stop": false,
+  "numBodies":  3,
+  "specialBodies":  1,
+  "read_particles_from_file": true,
+  "particles_conf_file": "/media/storage/git/cc7515_t3/resources/particles_lagrange.csv"
+}
