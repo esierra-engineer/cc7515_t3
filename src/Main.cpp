@@ -27,28 +27,36 @@ namespace fs = std::filesystem;
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include <nlohmann/json.hpp>
+#include "csv.h"
 
 #define DEFAULT_DT 0.01f
 #define DEFAULT_N_BODIES 4096
 #define DEFAULT_N_SPECIAL_BODIES 0
 #define SHOW_CONF_AT_START false
+#define CONF_JSON_PATH "/media/storage/git/cc7515_t3/src/config.json"
+#define CONF_PARTICLES_PATH "/media/storage/git/cc7515_t3/src/particles.csv"
 
-const unsigned int width = 800;
-const unsigned int height = 800;
-constexpr auto camera_init_pos = glm::vec3(0.0f, 0.0f, 120.0f);
+using json = nlohmann::json;
+
+// Declare variables
+unsigned int width;
+unsigned int height;
+glm::vec3 camera_init_pos(0.0f);
+double scale;
+float sm;
+float m;
+std::string kernel_filename;
+int local_size;
+float sourceLightColor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+int useGPU;
+bool prevRightCtrlState;
+bool stop;
+
 Body* bodies;
-const double scale = 1.0;
+int numBodies;
+int specialBodies;
 float dt = DEFAULT_DT;
-float sm = 1.0;
-float m = 1.0;
-int numBodies = DEFAULT_N_BODIES;
-int specialBodies = DEFAULT_N_SPECIAL_BODIES;
-std::string kernel_filename = "kernel.ptx";
-int local_size = 32;
-float sourceLightColor[4] = {1.0f, 1.0f, 1.0f, 1.0f};
-static int useGPU = 1;
-bool prevRightCtrlState = false;
-bool stop = false;
 bool showConf = SHOW_CONF_AT_START;
 
 GLfloat lightVertices[] =
@@ -120,6 +128,31 @@ void showConfWindow();
 
 int main()
 {
+	std::ifstream f(CONF_JSON_PATH);
+	json configJson = json::parse(f);
+
+	// Assign values from JSON
+	width = configJson["width"];
+	height = configJson["height"];
+	camera_init_pos = glm::vec3(
+		configJson["camera_init_pos"]["x"],
+		configJson["camera_init_pos"]["y"],
+		configJson["camera_init_pos"]["z"]
+	);
+	scale = configJson["scale"];
+	sm = configJson["sm"];
+	m = configJson["m"];
+	kernel_filename = configJson["kernel_filename"];
+	local_size = configJson["local_size"];
+
+	for (int i = 0; i < 4; ++i) {
+		sourceLightColor[i] = configJson["sourceLightColor"][i];
+	}
+
+	useGPU = configJson["useGPU"] ? 1 : 0;
+	prevRightCtrlState = configJson["prevRightCtrlState"];
+	stop = configJson["stop"];
+
 	// Initialize GLFW
 	glfwInit();
 
@@ -243,7 +276,18 @@ int main()
 	// create Bodies vector
 	bodies = new Body[DEFAULT_N_BODIES + DEFAULT_N_BODIES];
 	// give random positions
-	generateRandomBodies(bodies, DEFAULT_N_BODIES, DEFAULT_N_SPECIAL_BODIES);
+	generateRandomBodies(bodies, DEFAULT_N_BODIES, DEFAULT_N_SPECIAL_BODIES, true, CONF_PARTICLES_PATH);
+
+
+	if (configJson.contains("numBodies"))
+		numBodies = configJson["numBodies"];
+	else
+		numBodies = DEFAULT_N_BODIES;
+
+	if (configJson.contains("specialBodies"))
+		specialBodies = configJson["specialBodies"];
+	else
+		specialBodies = DEFAULT_N_SPECIAL_BODIES;
 
 
 	// Main while loop
@@ -305,7 +349,7 @@ int main()
 			ImGui::SliderFloat("Special Mass (e+9)", &sm, 1, 1e3f, "%.0f");
 			ImGui::ColorEdit4("Light Color", sourceLightColor);
 			if (ImGui::Button("Reset")) {
-				generateRandomBodies(bodies, numBodies, specialBodies);
+				generateRandomBodies(bodies, numBodies, specialBodies, true, CONF_PARTICLES_PATH);
 				showConf = !showConf;
 			}
 			ImGui::End();

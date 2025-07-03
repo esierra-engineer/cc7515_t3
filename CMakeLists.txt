@@ -66,7 +66,14 @@ add_executable(CC7515_T3
         ${IMGUI_SRC}
 )
 
-target_link_libraries(CC7515_T3 PRIVATE glfw OpenGL::GL cuda)
+if (CMAKE_VERSION VERSION_GREATER 3.12)
+    set_property(TARGET CC7515_T3 PROPERTY CXX_STANDARD 20)
+endif()
+
+include(FetchContent)
+FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz)
+FetchContent_MakeAvailable(json)
+
 
 target_include_directories(CC7515_T3 PRIVATE
         ${CMAKE_SOURCE_DIR}/Libraries/include/imgui
@@ -74,6 +81,8 @@ target_include_directories(CC7515_T3 PRIVATE
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/Libraries/include
 )
+
+target_link_libraries(CC7515_T3 PRIVATE glfw OpenGL::GL cuda nlohmann_json::nlohmann_json)
 
 # CUDA-specific target properties
 set_target_properties(CC7515_T3 PROPERTIES

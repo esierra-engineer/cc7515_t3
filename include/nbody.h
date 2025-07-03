@@ -1,6 +1,7 @@
 //
 // Created by erick on 5/8/25.
 //
+#include <csv.h>
 #include <glm/glm.hpp>
 
 #ifndef NBODY_H
@@ -19,6 +20,6 @@ public:
 
 void simulateNBodyCPU(Body* bodies, int n, float dt, float *mass, float* special_mass);
 void simulateNBodyCUDA(Body* h_bodies, const char* kernelFilename, int localSize, int n, float dt, float* mass, float* special_mass);
-void generateRandomBodies(Body* bodies, int n, int n_specials);
+void generateRandomBodies(Body* bodies, int n, int n_specials, bool from_file, char* csv_path);
 
 #endif
