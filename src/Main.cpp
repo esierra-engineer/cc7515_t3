@@ -60,7 +60,7 @@ std::string particles_conf_file;
 Body* bodies;
 int numBodies;
 int specialBodies;
-float dt = DEFAULT_DT;
+float dt;
 bool showConf = SHOW_CONF_AT_START;
 
 GLfloat lightVertices[] =
@@ -302,6 +302,9 @@ int main(int argc, char** argv)
 	else
 		specialBodies = DEFAULT_N_SPECIAL_BODIES;
 
+	if (configJson.contains("dt")) dt = configJson["dt"];
+	else dt = DEFAULT_DT;
+
 
 	// Main while loop
 	while (!glfwWindowShouldClose(window))
@@ -355,7 +358,7 @@ int main(int argc, char** argv)
 			ImGui::SameLine();
 			ImGui::RadioButton("CPU", &useGPU, 0);
 
-			ImGui::SliderFloat("Time Step", &dt, DEFAULT_DT, 1.0f);
+			ImGui::SliderFloat("Time Step", &dt, DEFAULT_DT, 100.0f);
 			ImGui::SliderInt("Bodies", &numBodies, 1, DEFAULT_N_BODIES);
 			ImGui::SliderInt("Special Bodies", &specialBodies, 0, DEFAULT_N_BODIES);
 			ImGui::SliderFloat("Normal Mass (e+9)", &m, 1, 1e3f, "%.0f");

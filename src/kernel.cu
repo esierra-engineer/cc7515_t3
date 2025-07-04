@@ -7,14 +7,17 @@
 #include <cstdlib> // For integer abs()
 #include "../include/nbody.h"
 #define G_CONSTANT 6.67430e-11f
-#define NEAR_ZERO 0.1f
-#define DEFAULT_MASS 1e9
 #define debug false
 
 // universal gravitational constant
 const float G = G_CONSTANT;
 
+
 extern "C" __global__ void updateBodies(Body *bodies, int n, float dt, float mass, float special_mass) {
+    float Fx = 0.0f;
+    float Fy = 0.0f;
+    float Fz = 0.0f;
+
     // i is the body index (global thread index),
     // each thread handles ONE BODY
     int i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -26,11 +29,12 @@ extern "C" __global__ void updateBodies(Body *bodies, int n, float dt, float mas
     Body bi = bodies[i];
 
     // border conditions, initial net force is null
-    float F = 0.0f, Fx = 0.0f, Fy = 0.0f, Fz = 0.0f;
+    float F = 0.0f;
+    //float3 VecF = make_float3(0.0f, 0.0f, 0.0f);
 
-    float mi = bi.mass < 0 ? (bi.special ? special_mass : mass) : bi.mass / DEFAULT_MASS;
+    float mi = bi.mass < 0 ? (bi.special ? special_mass : mass) : bi.mass;
 
-    if (!debug) {
+    if (debug) {
         printf("(IN) Body %d: pos=(%f,%f,%f) vel=(%f,%f,%f), mass = (%f)\n", i, bi.posVec.x, bi.posVec.y, bi.posVec.z,
                bi.velVec.x, bi.velVec.y, bi.velVec.z, mi);
     }
@@ -43,7 +47,7 @@ extern "C" __global__ void updateBodies(Body *bodies, int n, float dt, float mas
         // this other body (global memory access here)
         Body bj = bodies[j];
 
-        float mj = bj.mass < 0 ? (bj.special ? special_mass : mass) : bj.mass / DEFAULT_MASS;
+        float mj = bj.mass < 0 ? (bj.special ? special_mass : mass) : bj.mass;
 
         // the distance between bodies in x, y and z
         float dx = bj.posVec.x - bi.posVec.x;
@@ -51,21 +55,32 @@ extern "C" __global__ void updateBodies(Body *bodies, int n, float dt, float mas
         float dz = bj.posVec.z - bi.posVec.z;
 
         // Euclidean distance (avoid division by zero by adding a small constant)
-        float distSqr = dx * dx + dy * dy + dz * dz + NEAR_ZERO * NEAR_ZERO;
+        float distSqr = dx * dx + dy * dy + dz * dz + FLT_MIN;
 
         // Newton's gravity, vectorial form
-        if (abs(distSqr) > NEAR_ZERO * NEAR_ZERO) {
-            // inverse of the distance
-            float invDist = rsqrtf(distSqr);
+        // inverse of the distance
+        float invDist = rsqrtf(distSqr);
 
-            // F = G * m1 * m2 / ...
-            F = G * mi * mj * powf(invDist, 3.0f);
+        // F = G * m1 * m2 / ...
+        F = G * mi * mj * powf(invDist, 3.0f);
+
+        if (debug) {
+            printf("G mi mj = %f\n", G  * mi * mj);
+            printf("invDist^3 = %f\n", powf(invDist, 3.0f));
+            printf("F{%d}_{%d} = %f \n", i, j, F);
         }
 
         // update net force over body for x,y,z
+        //VecF = VecF + (F * make_float3(dx, dy, dz));
+
         Fx += F * dx;
         Fy += F * dy;
         Fz += F * dz;
+        if (debug) {
+            printf("(OUT) Body %d: dr=(%f,%f,%f)\n", i, dx, dy, dz);
+            //printf("(OUT) Body %d: force=(%f,%f,%f)\n", i, glm::vec3(dx, dy, dz).x * F, glm::vec3(dx, dy, dz).y * F, glm::vec3(dx, dy, dz).z * F);
+            printf("(OUT) Body %d: force=(%f,%f,%f)\n", i, Fx, Fy, Fz);
+        }
     }
 
     /** update velocity
@@ -74,9 +89,11 @@ extern "C" __global__ void updateBodies(Body *bodies, int n, float dt, float mas
      * then (dv = F * dt / m)
      * then v = v + dv
      * **/
-    bi.velVec.x += Fx / mi * dt;
-    bi.velVec.y += Fy / mi * dt;
-    bi.velVec.z += Fz / mi * dt;
+    bi.velVec.x += Fx / mi * (dt);
+    bi.velVec.y += Fy / mi * (dt);
+    bi.velVec.z += Fz / mi * (dt);
+    // bi.velVec += VecF * 1.0f/mi * (dt);
+    // bi.posVec += bi.velVec * (dt);
 
     /** update position
      * v = dx/dt

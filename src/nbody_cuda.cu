@@ -19,9 +19,10 @@
  * @param localSize Block size
  * @param n Number of bodies
  */
-void simulateNBodyCUDA(Body* h_bodies, const char* kernelFilename, int localSize, int n, float dt, float* mass, float* special_mass) {
-    float deref_mass = *mass * DEFAULT_MASS;
-    float deref_special_mass = *special_mass * DEFAULT_MASS;
+void simulateNBodyCUDA(Body* h_bodies, const char* kernelFilename, int localSize,
+    int n, float dt, float* mass, float* special_mass) {
+    float deref_mass = *mass;
+    float deref_special_mass = *special_mass;
 
     // destination memory address pointer
     Body* d_bodies;

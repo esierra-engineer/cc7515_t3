@@ -31,7 +31,7 @@ void generateBodies(Body* bodies, int n, int n_specials, bool from_file, std::st
             bodies[index].posVec = glm::vec3(xpos, ypos, zpos);
             bodies[index].velVec = glm::vec3(xvel, yvel, zvel);
             bodies[index].special = special;
-            bodies[index].mass = std::pow(mass, mass_exp);
+            bodies[index].mass = mass * powf(10, mass_exp);
         }
     }
 
