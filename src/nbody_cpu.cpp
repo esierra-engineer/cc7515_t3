@@ -19,11 +19,13 @@ void simulateNBodyCPU(Body* bodies, int n, float dt, float *mass, float* special
 
     for (int i = 0; i < n; ++i) {
         Body bi = bodies[i];
+        float mi = bi.mass < 0 ? (bi.special ? deref_special_mass : deref_mass) : bi.mass / DEFAULT_MASS;
         F= 0.0, Fx = 0.0f, Fy = 0.0f, Fz = 0.0f;
 
         for (int j = 0; j < n; ++j) {
             if (i == j) continue;
             Body bj = bodies[j];
+            float mj = bj.mass < 0 ? (bj.special ? deref_special_mass : deref_mass) : bj.mass / DEFAULT_MASS;
 
             float dx = bj.posVec.x - bi.posVec.x;
             float dy = bj.posVec.y - bi.posVec.y;
@@ -36,16 +38,16 @@ void simulateNBodyCPU(Body* bodies, int n, float dt, float *mass, float* special
                 float invDist = rsqrtf(distSqr);
 
                 // F = G * m1 * m2 / ...
-                F = G * (bi.special ? deref_special_mass : deref_mass) * (bj.special ? deref_special_mass : deref_mass) * powf(invDist, 3.0f);
+                F = G * mi * mj * powf(invDist, 3.0f);
             }
 
             Fx += F * dx;
             Fy += F * dy;
             Fz += F * dz;
         }
-        bi.velVec.x += Fx / (bi.special ? deref_special_mass : deref_mass) * dt;
-        bi.velVec.y += Fy / (bi.special ? deref_special_mass : deref_mass) * dt;
-        bi.velVec.z += Fz / (bi.special ? deref_special_mass : deref_mass) * dt;
+        bi.velVec.x += Fx / mi * dt;
+        bi.velVec.y += Fy / mi * dt;
+        bi.velVec.z += Fz / mi * dt;
 
         bi.posVec.x += bi.velVec.x * dt;
         bi.posVec.y += bi.velVec.y * dt;
