@@ -8,6 +8,7 @@
 #include "../include/nbody.h"
 #define G_CONSTANT 6.67430e-11f
 #define NEAR_ZERO 0.1f
+#define DEFAULT_MASS 1e9
 #define debug false
 
 // universal gravitational constant
@@ -27,10 +28,13 @@ extern "C" __global__ void updateBodies(Body *bodies, int n, float dt, float mas
     // border conditions, initial net force is null
     float F = 0.0f, Fx = 0.0f, Fy = 0.0f, Fz = 0.0f;
 
-    if (debug) {
-        printf("(IN) Body %d: pos=(%f,%f,%f) vel=(%f,%f,%f)\n", i, bi.posVec.x, bi.posVec.y, bi.posVec.z,
-               bi.velVec.x, bi.velVec.y, bi.velVec.z);
+    float mi = bi.mass < 0 ? (bi.special ? special_mass : mass) : bi.mass / DEFAULT_MASS;
+
+    if (!debug) {
+        printf("(IN) Body %d: pos=(%f,%f,%f) vel=(%f,%f,%f), mass = (%f)\n", i, bi.posVec.x, bi.posVec.y, bi.posVec.z,
+               bi.velVec.x, bi.velVec.y, bi.velVec.z, mi);
     }
+
 
     // for each other body
     for (int j = 0; j < n; ++j) {
@@ -38,6 +42,8 @@ extern "C" __global__ void updateBodies(Body *bodies, int n, float dt, float mas
         if (i == j) continue;
         // this other body (global memory access here)
         Body bj = bodies[j];
+
+        float mj = bj.mass < 0 ? (bj.special ? special_mass : mass) : bj.mass / DEFAULT_MASS;
 
         // the distance between bodies in x, y and z
         float dx = bj.posVec.x - bi.posVec.x;
@@ -53,7 +59,7 @@ extern "C" __global__ void updateBodies(Body *bodies, int n, float dt, float mas
             float invDist = rsqrtf(distSqr);
 
             // F = G * m1 * m2 / ...
-            F = G * (bi.special ? special_mass : mass) * (bj.special ? special_mass : mass) * powf(invDist, 3.0f);
+            F = G * mi * mj * powf(invDist, 3.0f);
         }
 
         // update net force over body for x,y,z
@@ -68,9 +74,9 @@ extern "C" __global__ void updateBodies(Body *bodies, int n, float dt, float mas
      * then (dv = F * dt / m)
      * then v = v + dv
      * **/
-    bi.velVec.x += Fx / (bi.special ? special_mass : mass) * dt;
-    bi.velVec.y += Fy / (bi.special ? special_mass : mass) * dt;
-    bi.velVec.z += Fz / (bi.special ? special_mass : mass) * dt;
+    bi.velVec.x += Fx / mi * dt;
+    bi.velVec.y += Fy / mi * dt;
+    bi.velVec.z += Fz / mi * dt;
 
     /** update position
      * v = dx/dt

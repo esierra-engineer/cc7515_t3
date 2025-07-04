@@ -6,6 +6,7 @@
 
 #include <csv.h>
 #include <cuda.h>
+#include <cmath>
 #include <iostream>
 #include <random>
 
@@ -19,16 +20,18 @@ void check(CUresult err, const char* func, const char* file, int line) {
     }
 }
 
-void generateRandomBodies(Body* bodies, int n, int n_specials, bool from_file, std::string csv_path) {
+void generateBodies(Body* bodies, int n, int n_specials, bool from_file, std::string csv_path) {
 #define FACTOR 30.0f
     if (from_file) {
-        io::CSVReader<8> in(csv_path);
-        in.read_header(io::ignore_extra_column, "index", "xpos", "ypos", "zpos", "xvel", "yvel", "zvel", "special");
-        int index, special; float xpos, ypos, zpos, xvel, yvel, zvel;
-        while(in.read_row(index, xpos, ypos, zpos, xvel, yvel, zvel, special)){
+        io::CSVReader<10> in(csv_path);
+        in.read_header(io::ignore_missing_column,
+            "index", "xpos", "ypos", "zpos", "xvel", "yvel", "zvel", "special", "mass", "mass_exp");
+        int index, special; float xpos, ypos, zpos, xvel, yvel, zvel, mass, mass_exp;
+        while(in.read_row(index, xpos, ypos, zpos, xvel, yvel, zvel, special, mass, mass_exp)){
             bodies[index].posVec = glm::vec3(xpos, ypos, zpos);
             bodies[index].velVec = glm::vec3(xvel, yvel, zvel);
             bodies[index].special = special;
+            bodies[index].mass = std::pow(mass, mass_exp);
         }
     }
 

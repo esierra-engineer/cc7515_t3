@@ -21,7 +21,7 @@
  */
 void simulateNBodyCUDA(Body* h_bodies, const char* kernelFilename, int localSize, int n, float dt, float* mass, float* special_mass) {
     float deref_mass = *mass * DEFAULT_MASS;
-    float deref__special_mass = *special_mass * DEFAULT_MASS;
+    float deref_special_mass = *special_mass * DEFAULT_MASS;
 
     // destination memory address pointer
     Body* d_bodies;
@@ -53,7 +53,7 @@ void simulateNBodyCUDA(Body* h_bodies, const char* kernelFilename, int localSize
         (void*) &n,
         (void*) &dt,
         (void*) &deref_mass,
-        (void*) &deref__special_mass
+        (void*) &deref_special_mass
     };
 
     checkCudaErrors(

@@ -130,9 +130,16 @@ void drawSpheres(Body* bodies, const Shader& shaderProgram, int N);
 
 void showConfWindow();
 
-int main()
+int main(int argc, char** argv)
 {
-	std::ifstream f(CONF_JSON_PATH);
+	if (argc<2) {
+		std::cerr << "Please specify json path";
+		return 1;
+	}
+
+	std::string json_path(argv[1]);
+
+	std::ifstream f(json_path);
 	json configJson = json::parse(f);
 
 	// Assign values from JSON
@@ -282,7 +289,7 @@ int main()
 	// create Bodies vector
 	bodies = new Body[DEFAULT_N_BODIES + DEFAULT_N_BODIES];
 	// give random positions
-	generateRandomBodies(bodies, DEFAULT_N_BODIES, DEFAULT_N_SPECIAL_BODIES, read_particles_from_file, particles_conf_file);
+	generateBodies(bodies, DEFAULT_N_BODIES, DEFAULT_N_SPECIAL_BODIES, read_particles_from_file, particles_conf_file);
 
 
 	if (configJson.contains("numBodies"))
@@ -355,7 +362,7 @@ int main()
 			ImGui::SliderFloat("Special Mass (e+9)", &sm, 1, 1e3f, "%.0f");
 			ImGui::ColorEdit4("Light Color", sourceLightColor);
 			if (ImGui::Button("Reset")) {
-				generateRandomBodies(bodies, numBodies, specialBodies, read_particles_from_file, particles_conf_file);
+				generateBodies(bodies, numBodies, specialBodies, read_particles_from_file, particles_conf_file);
 				showConf = !showConf;
 			}
 			ImGui::End();
@@ -374,7 +381,7 @@ int main()
 			simulateNBodyCUDA(bodies, kernel_filename.c_str(), local_size, numBodies + specialBodies, dt, &m, &sm);
 			// unmap resources
 			cudaGraphicsUnmapResources(1, &cudaVBO);
-		} else if (!useGPU & !stop) {
+		} else if (!(useGPU || stop)) {
 			simulateNBodyCPU(bodies, numBodies + specialBodies, dt, &m, &sm);
 		}
 
