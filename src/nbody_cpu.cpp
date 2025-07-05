@@ -33,7 +33,7 @@ void simulateNBodyCPU(Body* bodies, int n, float dt, float *mass, float* special
             float dy = bj.posVec.y - bi.posVec.y;
             float dz = bj.posVec.z - bi.posVec.z;
 
-            float distSqr = dx * dx + dy * dy + dz * dz + FLT_MIN;
+            float distSqr = dx * dx + dy * dy + dz * dz + 1.0f;
 
             // inverse of the distance
             float invDist = rsqrtf(distSqr);

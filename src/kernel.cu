@@ -55,7 +55,7 @@ extern "C" __global__ void updateBodies(Body *bodies, int n, float dt, float mas
         float dz = bj.posVec.z - bi.posVec.z;
 
         // Euclidean distance (avoid division by zero by adding a small constant)
-        float distSqr = dx * dx + dy * dy + dz * dz + FLT_MIN;
+        float distSqr = dx * dx + dy * dy + dz * dz + 1;
 
         // Newton's gravity, vectorial form
         // inverse of the distance

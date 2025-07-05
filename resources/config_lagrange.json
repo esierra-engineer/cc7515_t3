@@ -14,10 +14,9 @@
   "local_size": 128,
   "sourceLightColor": [1.0, 1.0, 1.0, 1.0],
   "useGPU": true,
-  "prevRightCtrlState": false,
   "stop": false,
-  "numBodies":  3,
-  "specialBodies":  0,
+  "numBodies":  2,
+  "specialBodies":  1,
   "read_particles_from_file": true,
   "particles_conf_file": "/media/storage/git/cc7515_t3/resources/particles_lagrange.csv"
 }

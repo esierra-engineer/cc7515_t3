@@ -14,7 +14,6 @@
   "local_size": 128,
   "sourceLightColor": [1.0, 1.0, 1.0, 1.0],
   "useGPU": true,
-  "prevRightCtrlState": false,
   "stop": false,
   "numBodies":  1024,
   "specialBodies":  1,

@@ -51,7 +51,6 @@ std::string kernel_filename;
 int local_size;
 float sourceLightColor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 int useGPU;
-bool prevRightCtrlState;
 bool stop;
 bool read_particles_from_file = CONF_READ_FILE;
 std::string particles_conf_file;
@@ -176,7 +175,6 @@ int main(int argc, char** argv)
 	}
 
 	useGPU = configJson["useGPU"] ? 1 : 0;
-	prevRightCtrlState = configJson["prevRightCtrlState"];
 	stop = configJson["stop"];
 	read_particles_from_file = configJson["read_particles_from_file"];
 	particles_conf_file = configJson["particles_conf_file"];
