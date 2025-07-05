@@ -33,49 +33,49 @@ void Camera::Matrix(Shader& shader, const char* uniform)
 
 
 
-void Camera::Inputs(GLFWwindow* window)
+void Camera::KeyboardInputs(GLFWwindow* window, int key, int action)
 {
 	// Handles key inputs
-	if (glfwGetKey(window, GLFW_KEY_V) == GLFW_PRESS)
+	if (key == GLFW_KEY_V && action == GLFW_PRESS)
 	{
 		std::cout << "Reseting camera...\n";
 		Position = defaultPosition;
 		Orientation = defaultOrientation;
 	}
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-	{
+	if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
 		Position += speed * Orientation;
 	}
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+	if (key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT))
 	{
 		Position += speed * -glm::normalize(glm::cross(Orientation, Up));
 	}
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+	if (key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT))
 	{
 		Position += speed * -Orientation;
 	}
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+	if (key == GLFW_KEY_D && (action == GLFW_PRESS || action == GLFW_REPEAT))
 	{
 		Position += speed * glm::normalize(glm::cross(Orientation, Up));
 	}
-	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+	if (key == GLFW_KEY_SPACE && (action == GLFW_PRESS || action == GLFW_REPEAT))
 	{
 		Position += speed * Up;
 	}
-	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+	if (key == GLFW_KEY_LEFT_CONTROL && (action == GLFW_PRESS || action == GLFW_REPEAT))
 	{
 		Position += speed * -Up;
 	}
-	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+	if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS)
 	{
 		speed = 4 * NORMAL_SPEED;
 	}
-	else if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE)
+	else if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_RELEASE)
 	{
 		speed = NORMAL_SPEED;
 	}
+}
 
-
+void Camera::MouseInputs(GLFWwindow *window) {
 	// Handles mouse inputs
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
 	{

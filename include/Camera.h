@@ -42,6 +42,7 @@ public:
 	// Exports the camera matrix to a shader
 	void Matrix(Shader& shader, const char* uniform);
 	// Handles camera inputs
-	void Inputs(GLFWwindow* window);
+	void KeyboardInputs(GLFWwindow* window, int key, int action);
+	void MouseInputs(GLFWwindow* window);
 };
 #endif

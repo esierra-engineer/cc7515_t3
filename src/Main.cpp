@@ -91,7 +91,8 @@ GLuint lightIndices[] =
 	4, 6, 7
 };
 
-
+Camera* cam;
+json* jsoncfg;
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	if (key == GLFW_KEY_RIGHT_CONTROL && action == GLFW_PRESS) {
 		stop = !stop;
@@ -114,7 +115,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	}
 
 	if (key == GLFW_KEY_R && action == GLFW_PRESS) {
-		dt = DEFAULT_DT;
+		if (json cfg = *jsoncfg; cfg.contains("dt")) dt = cfg["dt"];
+		else dt = DEFAULT_DT;
 		std::cout << "Resetting time step to " << dt << "\n";
 	}
 
@@ -122,9 +124,21 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		std::cout << (showConf ? "Closing" : "Opening") << " conf. Window... \n";
 		showConf = !showConf;
 	}
+	// CAMERA
+	if (!showConf) cam->KeyboardInputs(window, key, action);
 }
 
-void processInput(GLFWwindow* window, Camera* camera);
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+	if (showConf) return;
+	cam->KeyboardInputs(window, button, action);
+	cam->MouseInputs(window);
+
+}
+
+static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos){
+	if (showConf) return;
+	cam->MouseInputs(window);
+}
 
 void drawSpheres(Body* bodies, const Shader& shaderProgram, int N);
 
@@ -141,6 +155,7 @@ int main(int argc, char** argv)
 
 	std::ifstream f(json_path);
 	json configJson = json::parse(f);
+	jsoncfg = &configJson;
 
 	// Assign values from JSON
 	width = configJson["width"];
@@ -188,6 +203,8 @@ int main(int argc, char** argv)
 	}
 	//
 	glfwSetKeyCallback(window, key_callback);
+	glfwSetMouseButtonCallback(window, mouse_button_callback);
+	glfwSetCursorPosCallback(window, cursor_position_callback);
 	// Introduce the window into the current context
 	glfwMakeContextCurrent(window);
 
@@ -262,13 +279,12 @@ int main(int argc, char** argv)
 	Texture brickTex(texture_path.c_str(), GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
 	brickTex.texUnit(shaderProgram, "tex0", 0);
 
-
-
 	// Enables the Depth Buffer
 	glEnable(GL_DEPTH_TEST);
 
 	// Creates camera object
 	Camera camera(width, height, camera_init_pos);
+	cam = &camera;
 
 	// CUDA interop
 	cudaGraphicsResource_t cudaVBO;
@@ -389,7 +405,7 @@ int main(int argc, char** argv)
 		}
 
 		// listen to key events
-		processInput(window, &camera);
+		//processInput(window, &camera);
 
 		// Swap the back buffer with the front buffer
 		glfwSwapBuffers(window);
@@ -453,8 +469,4 @@ void drawSpheres(Body* bodies, const Shader& shaderProgram, int N) {
 		glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
 		glDrawElements(GL_TRIANGLES, sizeof(sphereIndices) / sizeof(GLuint), GL_UNSIGNED_INT, nullptr);
 	}
-}
-
-void processInput(GLFWwindow* window, Camera* camera) {
-	if (!showConf) camera->Inputs(window);
 }
