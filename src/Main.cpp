@@ -396,6 +396,10 @@ int main(int argc, char** argv)
 
 	createDrawBodies(drawBodies, bodies, numBodies, specialBodies);
 
+	double previousTime = glfwGetTime();
+	int frameCount = 0;
+	std::string textFPS;
+
 	// Main while loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -441,6 +445,10 @@ int main(int argc, char** argv)
 		glfwPollEvents();
 
 		// Window Test
+		// Measure speed
+		double currentTime = glfwGetTime();
+		frameCount++;
+
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
@@ -450,6 +458,20 @@ int main(int argc, char** argv)
 		if (stop) showText = "STOPPED";
 		else showText = "RUNNING";
 		ImGui::Text(showText.c_str());
+
+		if ( currentTime - previousTime >= 1.0 )
+		{
+			// Display the frame count here any way you want.
+			textFPS = std::to_string(frameCount);
+
+			frameCount = 0;
+			previousTime = currentTime;
+		}
+
+		ImGui::Text("Framerate: ");
+		ImGui::Text(textFPS.c_str());
+		ImGui::Text(" FPS");
+
 		std::string btnText = stop ? "Resume" : "Pause";
 		if (ImGui::Button(btnText.c_str())) {
 			stop = !stop;
