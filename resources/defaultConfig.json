@@ -18,5 +18,7 @@
   "stop": false,
   "numBodies":  2048,
   "specialBodies":  2048,
-  "read_particles_from_file": false
+  "read_particles_from_file": false,
+  "particleTextureFile": "resources/grass.png",
+  "specialParticleTextureFile": "resources/football.png"
 }

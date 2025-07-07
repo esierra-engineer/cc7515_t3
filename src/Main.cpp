@@ -217,6 +217,8 @@ int main(int argc, char** argv)
 	specialMassFactor = configJson["specialMass"];
 	massFactor = configJson["mass"];
 	kernel_filename = configJson["kernel_filename"];
+	fs::path texture_path = configJson["particleTextureFile"];
+	fs::path texture_path_special = configJson["specialParticleTextureFile"];
 	local_size = configJson["local_size"];
 
 	for (int i = 0; i < 4; ++i) {
@@ -338,8 +340,8 @@ int main(int argc, char** argv)
 	glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), lightPos.x, lightPos.y, lightPos.z);
 
 	// Texture
-	fs::path texture_path = "resources/football.png";
-	fs::path texture_path_special = "resources/grass.png";
+	//fs::path texture_path = "resources/football.png";
+	//fs::path texture_path_special = "resources/grass.png";
 	Texture brickTex(texture_path.c_str(), GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
 	Texture specialTex(texture_path_special.c_str(), GL_TEXTURE_2D, GL_TEXTURE1, GL_RGBA, GL_UNSIGNED_BYTE);
 	brickTex.texUnit(shaderProgram, "tex0", 1);
