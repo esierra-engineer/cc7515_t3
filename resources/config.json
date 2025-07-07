@@ -6,7 +6,7 @@
     "y": 0.0,
     "z": 100.0
   },
-  "particleSize": 0.1,
+  "particleSize": 0.5,
   "specialParticleSize": 3.0,
   "dt": 50.0,
   "mass": 2.0e0,
@@ -19,5 +19,7 @@
   "numBodies":  10,
   "specialBodies":  10,
   "read_particles_from_file": false,
-  "particles_conf_file": "/media/storage/git/cc7515_t3/resources/particles.csv"
+  "particles_conf_file": "/media/storage/git/cc7515_t3/resources/particles.csv",
+  "specialParticleTextureFile": "resources/grass.png",
+  "particleTextureFile": "resources/football.png"
 }
