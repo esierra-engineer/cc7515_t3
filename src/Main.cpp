@@ -33,7 +33,6 @@ namespace fs = std::filesystem;
 #define DEFAULT_DT 0.01f
 #define DEFAULT_N_SPECIAL_BODIES 0
 #define SHOW_CONF_AT_START false
-#define CONF_JSON_PATH "/media/storage/git/cc7515_t3/resources/config.json"
 #define CONF_READ_FILE false
 #define MASS_SCALE 1.0e3f
 
@@ -214,7 +213,7 @@ int main(int argc, char** argv)
 		configJson["camera_init_pos"]["y"],
 		configJson["camera_init_pos"]["z"]
 	);
-	particleSize = configJson["scale"];
+	particleSize = configJson["particleSize"];
 	specialMassFactor = configJson["specialMass"];
 	massFactor = configJson["mass"];
 	kernel_filename = configJson["kernel_filename"];
@@ -227,7 +226,7 @@ int main(int argc, char** argv)
 	useGPU = configJson["useGPU"] ? 1 : 0;
 	stop = configJson["stop"];
 	read_particles_from_file = configJson["read_particles_from_file"];
-	particles_conf_file = configJson["particles_conf_file"];
+	if (read_particles_from_file) particles_conf_file = configJson["particles_conf_file"];
 
 	// Initialize GLFW
 	glfwInit();
@@ -387,7 +386,7 @@ int main(int argc, char** argv)
 	if (configJson.contains("dt")) dt = configJson["dt"];
 	else dt = DEFAULT_DT;
 
-	if (configJson.contains("specialParticleSize")) dt = configJson["specialParticleSize"];
+	if (configJson.contains("specialParticleSize")) specialParticleSize = configJson["specialParticleSize"];
 	else specialParticleSize = 1.0f * particleSize;
 
 	Body* drawBodies;
@@ -455,9 +454,7 @@ int main(int argc, char** argv)
 			ImGui::SliderInt("Bodies", &numBodies, 1, DEFAULT_N_BODIES);
 			ImGui::SliderInt("Special Bodies", &specialBodies, 0, DEFAULT_N_BODIES);
 			ImGui::SliderFloat("Normal Mass", &massFactor, 1, 1e3f, "%.0f");
-			m = MASS_SCALE * massFactor;
 			ImGui::SliderFloat("Special Mass", &specialMassFactor, 1, 1e3f, "%.0f");
-			sm = MASS_SCALE * specialMassFactor;
 			ImGui::SliderFloat("Particle Scale", &particleSize, 0.1f, 10.0f, "%.1f");
 			ImGui::SliderFloat("Special Particle Scale", &specialParticleSize, 0.1f, 10.0f, "%.1f");
 			ImGui::ColorEdit4("Light Color", sourceLightColor);
@@ -471,6 +468,9 @@ int main(int argc, char** argv)
 		}
 
 		createDrawBodies(drawBodies, bodies, numBodies, specialBodies);
+
+		m = MASS_SCALE * massFactor;
+		sm = MASS_SCALE * specialMassFactor;
 
 		// update positions
 		if (useGPU & !stop) {

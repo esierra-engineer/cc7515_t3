@@ -1,12 +1,12 @@
 {
-  "width": 1024,
-  "height": 768,
+  "width": 1280,
+  "height": 720,
   "camera_init_pos": {
     "x": 0.0,
     "y": 0.0,
     "z": 100.0
   },
-  "particleSize": 0.1,
+  "particleSize": 1.0,
   "specialParticleSize": 3.0,
   "dt": 50.0,
   "mass": 2.0e0,
@@ -15,9 +15,8 @@
   "local_size": 128,
   "sourceLightColor": [1.0, 1.0, 1.0, 1.0],
   "useGPU": true,
-  "stop": true,
-  "numBodies":  10,
-  "specialBodies":  10,
-  "read_particles_from_file": false,
-  "particles_conf_file": "/media/storage/git/cc7515_t3/resources/particles.csv"
+  "stop": false,
+  "numBodies":  2048,
+  "specialBodies":  2048,
+  "read_particles_from_file": false
 }
