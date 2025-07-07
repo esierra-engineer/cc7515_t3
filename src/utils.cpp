@@ -21,7 +21,7 @@ void check(CUresult err, const char* func, const char* file, int line) {
 }
 
 void generateBodies(Body* bodies, int n, int n_specials, bool from_file, std::string csv_path) {
-#define FACTOR 30.0f
+#define FACTOR 60.0f
     if (from_file) {
         io::CSVReader<10> in(csv_path);
         in.read_header(io::ignore_missing_column,
