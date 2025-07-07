@@ -437,14 +437,26 @@ int main(int argc, char** argv)
 		// Draw primitives, number of indices, datatype of indices, index of indices
 		glDrawElements(GL_TRIANGLES, sizeof(lightIndices) / sizeof(int), GL_UNSIGNED_INT, 0);
 
+		// Take care of all GLFW events
+		glfwPollEvents();
 
 		// Window Test
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+		ImGui::BeginMainMenuBar();
+		ImGui::Text("Simulation Status: ");
+		std::string showText;
+		if (stop) showText = "STOPPED";
+		else showText = "RUNNING";
+		ImGui::Text(showText.c_str());
+		std::string btnText = stop ? "Resume" : "Pause";
+		if (ImGui::Button(btnText.c_str())) {
+			stop = !stop;
+		}
+		ImGui::EndMainMenuBar();
 		// Start the Dear ImGui frame
 		if (showConf) {
-			ImGui_ImplOpenGL3_NewFrame();
-			ImGui_ImplGlfw_NewFrame();
-			ImGui::NewFrame();
-
 			//ImGui::ShowDemoWindow();
 			ImGui::Begin("Configuration");
 			ImGui::Text("Simulation Engine");
@@ -465,8 +477,6 @@ int main(int argc, char** argv)
 				showConf = !showConf;
 			}
 			ImGui::End();
-			ImGui::Render();
-			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		}
 
 		createDrawBodies(drawBodies, bodies, numBodies, specialBodies);
@@ -495,13 +505,12 @@ int main(int argc, char** argv)
 			bodies[DEFAULT_N_BODIES + i - numBodies] = drawBodies[i];
 		}
 
-		// listen to key events
-		//processInput(window, &camera);
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 		// Swap the back buffer with the front buffer
 		glfwSwapBuffers(window);
-		// Take care of all GLFW events
-		glfwPollEvents();
+
 	}
 
 	// Delete all the objects we've created
