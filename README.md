@@ -7,11 +7,11 @@ A real-time 3D N-body gravitational simulation implemented with CUDA and OpenGL,
 - **Operating System**: Debian 12 x64
 - **Hardware**: CUDA-compatible GPU
 - **Software Dependencies**:
-    - CUDA 12 compiler
-    - CMake 3.25+
-    - OpenGL
-    - GLFW
-    - GLM (OpenGL Mathematics)
+    - CUDA 12 compiler [**(Download)**](https://developer.nvidia.com/cuda-downloads)
+    - CMake 3.25+ [**(Download)**](https://cmake.org/download/)
+    - OpenGL [**(Download)**](https://www.khronos.org/opengl/wiki/Getting_Started#Downloading_OpenGL)
+    - GLFW [(**Installation Guide**)](https://www.glfw.org/docs/3.3/compile.html#compile_compile)
+    - GLM (OpenGL Mathematics) [**(Installation Guide)**](https://github.com/g-truc/glm?tab=readme-ov-file#build-and-install)
 
 ## Installation & Usage
 
@@ -30,9 +30,9 @@ cmake -S .. -B .
 make
 
 # Run the simulation
-./CC7515_T3
+./CC7515_T3 /path/to/config_file/config.json
 ```
-
+Default configuration file is ```resources/defaultConfig.json```.
 ## Features
 
 ### 🔧 CUDA-OpenGL Interoperability
@@ -80,7 +80,9 @@ This shader transforms vertex positions to clip space and calculates world-space
 - `vec2 TexCoord`: Texture coordinate.
 
 ##### Uniforms:
-- `sampler2D tex0`: The texture applied to the particle.
+- `sampler2D tex0`: The texture applied to regular particle.
+- `sampler2D tex1`: The texture applied to special particles.
+- `bool isSpecial`: Flag to identify special particles.
 - `vec3 lightPos`: Position of the light source.
 - `vec3 viewPos`: Position of the camera.
 
@@ -133,17 +135,17 @@ Transforms the light source geometry into clip space for rendering.
 ### 🎮 Interactive Controls
 
 #### Camera Controls (First Person)
-| Key | Action |
-|-----|--------|
-| `W` | Move forward |
-| `A` | Move left |
-| `S` | Move backward |
-| `D` | Move right |
-| `SPACE` | Move up |
-| `LEFT CTRL` | Move down |
-| `LEFT SHIFT` | Speed boost (4x) |
+| Key                 | Action |
+|---------------------|--------|
+| `W`                 | Move forward |
+| `A`                 | Move left |
+| `S`                 | Move backward |
+| `D`                 | Move right |
+| `SPACE`             | Move up |
+| `LEFT CTRL`         | Move down |
+| `LEFT SHIFT`        | Speed boost (4x) |
 | `Left Mouse Button` | Look around (hold and move mouse) |
-| `T` | Reset camera position |
+| `V`                 | Reset camera position |
 
 #### Simulation Controls
 | Key          | Action                          |
@@ -168,12 +170,102 @@ Press `C` to access the configuration panel with the following controls:
 - **Light Color**: Set color for illumination.
 - **Reset**: Restart the simulation with current parameters
 
+### Custom Simulation Parameters
+---
+
+#### 📐 Display Settings
+
+- **`width`**: `1280`  
+  Width of the simulation window in pixels.
+
+- **`height`**: `720`  
+  Height of the simulation window in pixels.
+
+---
+
+#### 🎥 Camera
+
+- **`camera_init_pos`**:
+  - `x`: `0.0`
+  - `y`: `0.0`
+  - `z`: `100.0`  
+    Initial position of the camera in world space.
+
+---
+
+#### 🌌 Particle Properties
+
+- **`particleSize`**: `1.0`  
+  Size of common particles.
+
+- **`specialParticleSize`**: `3.0`  
+  Size of special particles.
+
+- **`mass`**: `2.0e0`  
+  Mass of each common particle.
+
+- **`specialMass`**: `1.0e2`  
+  Mass of each special particle.
+
+---
+
+#### ⏱️ Simulation Settings
+
+- **`dt`**: `50.0`  
+  Time step (delta time) for each simulation iteration.
+
+- **`numBodies`**: `2048`  
+  Number of common particles in the simulation.
+
+- **`specialBodies`**: `2048`  
+  Number of special particles.
+
+- **`stop`**: `false`  
+  Boolean flag to stop or resume the simulation.
+
+- **`useGPU`**: `true`  
+  Enables GPU calculations using CUDA.
+
+---
+
+#### 🧠 Compute Settings
+
+- **`kernel_filename`**: `"kernel.ptx"`  
+  Filename of the compiled CUDA kernel used for force computation.
+
+- **`local_size`**: `128`  
+  Workgroup size for CUDA kernel execution.
+
+---
+
+#### 💡 Lighting
+
+- **`sourceLightColor`**: `[1.0, 1.0, 1.0, 1.0]`  
+  RGBA color of the main light source.
+
+---
+
+#### 🖼️ Textures
+
+- **`particleTextureFile`**: `"resources/football.png"`  
+  Texture file applied to common particles.
+
+- **`specialParticleTextureFile`**: `"resources/grass.png"`  
+  Texture file applied to special particles.
+
+---
+
+#### 📂 File I/O
+
+- **`read_particles_from_file`**: `false`  
+  Indicates whether to load particle data from a file or generate randomly.
+
 ## Technical Implementation
 
 ### Core Components
 - **Body Class**: Particle representation with GLM vec3 position/velocity vectors
 - **Light Source**: Single light positioned at (0.5, 0.5, 0.5)
-- **Texture System**: Football texture applied to all particle spheres
+- **Texture System**: Image texture applied to all particle spheres
 
 ### Current Status
 ✅ **Completed Features:**
@@ -185,7 +277,6 @@ Press `C` to access the configuration panel with the following controls:
 - Basic lighting system
 
 ⏳ **Pending Features:**
-- Variable particle colors
 - Spherical light source (currently cubic)
 
 ## File Structure
@@ -197,8 +288,8 @@ Press `C` to access the configuration panel with the following controls:
 ├── src/
 │   ├── shaders/          # Vertex and fragment shaders
 │   └── ...              # Source code files
-├── resources/
-│   └── football.png     # Particle texture
+├── resources/          # Config files and Textures
+│  
 ├── build/               # Build directory (created during compilation)
 │
 └── CMakeLists.txt      # cmake configuration file
