@@ -469,8 +469,7 @@ int main(int argc, char** argv)
 		}
 
 		ImGui::Text("Framerate: ");
-		ImGui::Text(textFPS.c_str());
-		ImGui::Text(" FPS");
+		ImGui::TextColored(ImVec4(1.0f, 0.0f, 1.0f, 1.0f), (textFPS + " FPS").c_str());
 
 		std::string btnText = stop ? "Resume" : "Pause";
 		if (ImGui::Button(btnText.c_str())) {
