@@ -41,7 +41,7 @@ void main()
 	float specAmount = pow(max(dot(viewDirection, reflectionDirection), 0.0f), 8);
 	float specular = specAmount * specularLight;
 
-	float texColor;
+	vec4 texColor;
 	if (isSpecial)  texColor = texture(tex1, texCoord);
 	else texColor = texture(tex0, texCoord);
 
