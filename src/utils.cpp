@@ -27,7 +27,12 @@ void generateBodies(Body* bodies, int n, int n_specials, bool from_file, std::st
         in.read_header(io::ignore_missing_column,
             "index", "xpos", "ypos", "zpos", "xvel", "yvel", "zvel", "special", "mass", "mass_exp");
         int index, special; float xpos, ypos, zpos, xvel, yvel, zvel, mass, mass_exp;
+        int special_count = 0;
         while(in.read_row(index, xpos, ypos, zpos, xvel, yvel, zvel, special, mass, mass_exp)){
+            if (special == 1) {
+                index = DEFAULT_N_BODIES + special_count;
+                ++special_count;
+            }
             bodies[index].posVec = glm::vec3(xpos, ypos, zpos);
             bodies[index].velVec = glm::vec3(xvel, yvel, zvel);
             bodies[index].special = special;
@@ -44,7 +49,7 @@ void generateBodies(Body* bodies, int n, int n_specials, bool from_file, std::st
             bodies[i].velVec = glm::vec3(0.0f);
             bodies[i].special = false;
         }
-        for (int i = n; i < n + n_specials; ++i) {
+        for (int i = DEFAULT_N_BODIES; i < DEFAULT_N_BODIES + n_specials; ++i) {
             bodies[i].posVec = glm::vec3(dist(gen), dist(gen), dist(gen));
             bodies[i].velVec = glm::vec3(0.0f);
             bodies[i].special = true;

@@ -31,11 +31,11 @@ namespace fs = std::filesystem;
 #include "csv.h"
 
 #define DEFAULT_DT 0.01f
-#define DEFAULT_N_BODIES 4096
 #define DEFAULT_N_SPECIAL_BODIES 0
 #define SHOW_CONF_AT_START false
 #define CONF_JSON_PATH "/media/storage/git/cc7515_t3/resources/config.json"
 #define CONF_READ_FILE false
+#define MASS_SCALE 1.0e3f
 
 
 using json = nlohmann::json;
@@ -44,9 +44,12 @@ using json = nlohmann::json;
 unsigned int width;
 unsigned int height;
 glm::vec3 camera_init_pos(0.0f);
-double scale;
+float particleSize;
+float specialParticleSize;
 float sm;
 float m;
+float massFactor = 1.0f;
+float specialMassFactor = 1.0f;
 std::string kernel_filename;
 int local_size;
 float sourceLightColor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
@@ -139,9 +142,56 @@ static void cursor_position_callback(GLFWwindow* window, double xpos, double ypo
 	cam->MouseInputs(window);
 }
 
-void drawSpheres(Body* bodies, const Shader& shaderProgram, int N);
+void drawSpheres(Body* bodies, const Shader& shaderProgram, int N, int offset = 0);
 
 void showConfWindow();
+
+void createDrawBodies(Body* drawBodies, Body* bodies, int numBodies, int specialBodies){
+	for (int i = 0 ; i < numBodies ; ++i) {
+		drawBodies[i] = bodies[i];
+	}
+	for (int i = numBodies ; i < numBodies + specialBodies ; ++i) {
+		drawBodies[i] = bodies[DEFAULT_N_BODIES + i - numBodies];
+	}
+}
+
+
+void drawSpheres(Body* bodies, const Shader& shaderProgram, int N, int offset) {
+	using namespace glm;
+	for (int i = offset; i < offset + N; ++i) {
+		if (debug) {
+			std::cout << "[drawSpheres] Animating element in index " << i << ":\n";
+
+		std::cout << "[drawSpheres] from position" <<
+				" x = " <<
+				bodies[i].posVec.x <<
+				" y = " <<
+				bodies[i].posVec.y <<
+				" z = " <<
+				bodies[i].posVec.z << "\n";
+		}
+
+		mat4 model = mat4(1.0f);
+
+		vec3 newPos = bodies[i].posVec;
+
+		if (debug) {
+			std::cout << "[drawSpheres] to position" <<
+			" x = " <<
+			newPos.x <<
+				" y = " <<
+					newPos.y <<
+						" z = " <<
+							newPos.z << "\n";
+		}
+
+		model = translate(model, newPos);
+		model = (bodies[i].special ? scale(model, vec3(specialParticleSize)) : scale(model, vec3(particleSize)));
+
+		glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, value_ptr(model));
+		glDrawElements(GL_TRIANGLES, sizeof(sphereIndices) / sizeof(GLuint), GL_UNSIGNED_INT, nullptr);
+	}
+}
 
 int main(int argc, char** argv)
 {
@@ -164,9 +214,9 @@ int main(int argc, char** argv)
 		configJson["camera_init_pos"]["y"],
 		configJson["camera_init_pos"]["z"]
 	);
-	scale = configJson["scale"];
-	sm = configJson["sm"];
-	m = configJson["m"];
+	particleSize = configJson["scale"];
+	specialMassFactor = configJson["specialMass"];
+	massFactor = configJson["mass"];
 	kernel_filename = configJson["kernel_filename"];
 	local_size = configJson["local_size"];
 
@@ -182,7 +232,7 @@ int main(int argc, char** argv)
 	// Initialize GLFW
 	glfwInit();
 
-	// Tell GLFW what version of OpenGL we are using 
+	// Tell GLFW what version of OpenGL we are using
 	// In this case we are using OpenGL 3.3
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -303,8 +353,7 @@ int main(int argc, char** argv)
 	// create Bodies vector
 	bodies = new Body[DEFAULT_N_BODIES + DEFAULT_N_BODIES];
 	// give random positions
-	generateBodies(bodies, DEFAULT_N_BODIES, DEFAULT_N_SPECIAL_BODIES, read_particles_from_file, particles_conf_file);
-
+	generateBodies(bodies, DEFAULT_N_BODIES, DEFAULT_N_BODIES, read_particles_from_file, particles_conf_file);
 
 	if (configJson.contains("numBodies"))
 		numBodies = configJson["numBodies"];
@@ -319,6 +368,13 @@ int main(int argc, char** argv)
 	if (configJson.contains("dt")) dt = configJson["dt"];
 	else dt = DEFAULT_DT;
 
+	if (configJson.contains("specialParticleSize")) dt = configJson["specialParticleSize"];
+	else specialParticleSize = 1.0f * particleSize;
+
+	Body* drawBodies;
+	drawBodies = new Body[DEFAULT_N_BODIES + DEFAULT_N_BODIES];
+
+	createDrawBodies(drawBodies, bodies, numBodies, specialBodies);
 
 	// Main while loop
 	while (!glfwWindowShouldClose(window))
@@ -345,7 +401,8 @@ int main(int argc, char** argv)
 		// Bind the VAO so OpenGL knows to use it
 		VAO1.Bind();
 		// Draw primitives, number of indices, datatype of indices, index of indices
-		drawSpheres(bodies, shaderProgram, numBodies + specialBodies);
+		drawSpheres(bodies, shaderProgram, numBodies, 0);
+		drawSpheres(bodies, shaderProgram, specialBodies, DEFAULT_N_BODIES);
 
 		// Tells OpenGL which Shader Program we want to use
 		lightShader.Activate();
@@ -375,18 +432,23 @@ int main(int argc, char** argv)
 			ImGui::SliderFloat("Time Step", &dt, DEFAULT_DT, 100.0f);
 			ImGui::SliderInt("Bodies", &numBodies, 1, DEFAULT_N_BODIES);
 			ImGui::SliderInt("Special Bodies", &specialBodies, 0, DEFAULT_N_BODIES);
-			ImGui::SliderFloat("Normal Mass (e+9)", &m, 1, 1e3f, "%.0f");
-			ImGui::SliderFloat("Special Mass (e+9)", &sm, 1, 1e3f, "%.0f");
+			ImGui::SliderFloat("Normal Mass", &massFactor, 1, 1e3f, "%.0f");
+			m = MASS_SCALE * massFactor;
+			ImGui::SliderFloat("Special Mass", &specialMassFactor, 1, 1e3f, "%.0f");
+			sm = MASS_SCALE * specialMassFactor;
+			ImGui::SliderFloat("Particle Scale", &particleSize, 0.1f, 10.0f, "%.1f");
+			ImGui::SliderFloat("Special Particle Scale", &specialParticleSize, 0.1f, 10.0f, "%.1f");
 			ImGui::ColorEdit4("Light Color", sourceLightColor);
 			if (ImGui::Button("Reset")) {
 				generateBodies(bodies, numBodies, specialBodies, read_particles_from_file, particles_conf_file);
 				showConf = !showConf;
 			}
 			ImGui::End();
-
 			ImGui::Render();
 			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		}
+
+		createDrawBodies(drawBodies, bodies, numBodies, specialBodies);
 
 		// update positions
 		if (useGPU & !stop) {
@@ -395,11 +457,18 @@ int main(int argc, char** argv)
 			size_t size;
 			cudaGraphicsMapResources(1, &cudaVBO);
 			cudaGraphicsResourceGetMappedPointer(reinterpret_cast<void **>(&devicePtr), &size, cudaVBO);
-			simulateNBodyCUDA(bodies, kernel_filename.c_str(), local_size, numBodies + specialBodies, dt, &m, &sm);
+			simulateNBodyCUDA(drawBodies, kernel_filename.c_str(), local_size, numBodies + specialBodies, dt, &m, &sm);
 			// unmap resources
 			cudaGraphicsUnmapResources(1, &cudaVBO);
 		} else if (!(useGPU || stop)) {
-			simulateNBodyCPU(bodies, numBodies + specialBodies, dt, &m, &sm);
+			simulateNBodyCPU(drawBodies, numBodies + specialBodies, dt, &m, &sm);
+		}
+
+		for (int i = 0 ; i < numBodies ; ++i) {
+			bodies[i] = drawBodies[i];
+		}
+		for (int i = numBodies ; i < numBodies + specialBodies ; ++i) {
+			bodies[DEFAULT_N_BODIES + i - numBodies] = drawBodies[i];
 		}
 
 		// listen to key events
@@ -430,41 +499,4 @@ int main(int argc, char** argv)
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
 	return 0;
-}
-
-
-void drawSpheres(Body* bodies, const Shader& shaderProgram, int N) {
-	for (int i = 0; i < N; ++i) {
-		if (debug) {
-			std::cout << "[drawSpheres] Animating element in index " << i << ":\n";
-
-		std::cout << "[drawSpheres] from position" <<
-				" x = " <<
-				bodies[i].posVec.x <<
-				" y = " <<
-				bodies[i].posVec.y <<
-				" z = " <<
-				bodies[i].posVec.z << "\n";
-		}
-
-		glm::mat4 model = glm::mat4(1.0f);
-
-		glm::vec3 newPos = bodies[i].posVec;
-
-		if (debug) {
-			std::cout << "[drawSpheres] to position" <<
-			" x = " <<
-			newPos.x <<
-				" y = " <<
-					newPos.y <<
-						" z = " <<
-							newPos.z << "\n";
-		}
-
-		model = glm::translate(model, newPos);
-		model = glm::scale(model, glm::vec3(scale));
-
-		glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(model));
-		glDrawElements(GL_TRIANGLES, sizeof(sphereIndices) / sizeof(GLuint), GL_UNSIGNED_INT, nullptr);
-	}
 }

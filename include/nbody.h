@@ -8,6 +8,7 @@
 #ifndef NBODY_H
 #define NBODY_H
 #define debug false
+#define DEFAULT_N_BODIES 4096
 
 /**
  * A structure to define a body
