@@ -15,6 +15,8 @@ in vec3 crntPos;
 
 // Gets the Texture Unit from the main function
 uniform sampler2D tex0;
+uniform sampler2D tex1;
+uniform bool isSpecial;
 // Gets the color of the light from the main function
 uniform vec4 lightColor;
 // Gets the position of the light from the main function
@@ -39,6 +41,10 @@ void main()
 	float specAmount = pow(max(dot(viewDirection, reflectionDirection), 0.0f), 8);
 	float specular = specAmount * specularLight;
 
+	float texColor;
+	if (isSpecial)  texColor = texture(tex1, texCoord);
+	else texColor = texture(tex0, texCoord);
+
 	// outputs final color
-	FragColor = texture(tex0, texCoord) * lightColor * (diffuse + ambient + specular);
+	FragColor = texColor * lightColor * (diffuse + ambient + specular);
 }

@@ -285,6 +285,22 @@ int main(int argc, char** argv)
 	VBO1.Unbind();
 	EBO1.Unbind();
 
+	VAO VAO2;
+	VAO2.Bind();
+	// Generates Vertex Buffer Object and links it to vertices
+	VBO VBO2(sphereVertices, sizeof(sphereVertices));
+	// Generates Element Buffer Object and links it to indices
+	EBO EBO2(sphereIndices, sizeof(sphereIndices));
+	// Links VBO attributes such as coordinates and colors to VAO
+	VAO2.LinkAttrib(VBO2, 0, 3, GL_FLOAT, 11 * sizeof(float), nullptr);
+	VAO2.LinkAttrib(VBO2, 1, 3, GL_FLOAT, 11 * sizeof(float), reinterpret_cast<void *>(3 * sizeof(float)));
+	VAO2.LinkAttrib(VBO2, 2, 2, GL_FLOAT, 11 * sizeof(float), reinterpret_cast<void *>(6 * sizeof(float)));
+	VAO2.LinkAttrib(VBO2, 3, 3, GL_FLOAT, 11 * sizeof(float), reinterpret_cast<void *>(8 * sizeof(float)));
+	// Unbind all to prevent accidentally modifying them
+	VAO2.Unbind();
+	VBO2.Unbind();
+	EBO2.Unbind();
+
 
 	// Shader for light cube
 	fs::path light_vert_path = "shaders/light.vert";
@@ -324,8 +340,11 @@ int main(int argc, char** argv)
 
 	// Texture
 	fs::path texture_path = "resources/football.png";
+	fs::path texture_path_special = "resources/grass.png";
 	Texture brickTex(texture_path.c_str(), GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
-	brickTex.texUnit(shaderProgram, "tex0", 0);
+	Texture specialTex(texture_path_special.c_str(), GL_TEXTURE_2D, GL_TEXTURE1, GL_RGBA, GL_UNSIGNED_BYTE);
+	brickTex.texUnit(shaderProgram, "tex0", 1);
+	//specialTex.texUnit(shaderProgram, "tex1", 1);
 
 	// Enables the Depth Buffer
 	glEnable(GL_DEPTH_TEST);
@@ -402,6 +421,9 @@ int main(int argc, char** argv)
 		VAO1.Bind();
 		// Draw primitives, number of indices, datatype of indices, index of indices
 		drawSpheres(bodies, shaderProgram, numBodies, 0);
+
+		specialTex.Bind();
+		VAO2.Bind();
 		drawSpheres(bodies, shaderProgram, specialBodies, DEFAULT_N_BODIES);
 
 		// Tells OpenGL which Shader Program we want to use
@@ -484,7 +506,11 @@ int main(int argc, char** argv)
 	VAO1.Delete();
 	VBO1.Delete();
 	EBO1.Delete();
+	VAO2.Delete();
+	VBO2.Delete();
+	EBO2.Delete();
 	brickTex.Delete();
+	specialTex.Delete();
 	shaderProgram.Delete();
 	lightVAO.Delete();
 	lightVBO.Delete();
