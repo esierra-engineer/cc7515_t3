@@ -65,31 +65,31 @@ float dt;
 bool showConf = SHOW_CONF_AT_START;
 
 GLfloat lightVertices[] =
-{ //     COORDINATES     //
-	-0.1f, -0.1f,  0.1f,
-	-0.1f, -0.1f, -0.1f,
-	 0.1f, -0.1f, -0.1f,
-	 0.1f, -0.1f,  0.1f,
-	-0.1f,  0.1f,  0.1f,
-	-0.1f,  0.1f, -0.1f,
-	 0.1f,  0.1f, -0.1f,
-	 0.1f,  0.1f,  0.1f
-};
+ { //     COORDINATES     //
+ 	-0.1f, -0.1f,  0.1f,
+ 	// -0.1f, -0.1f, -0.1f,
+ 	//  0.1f, -0.1f, -0.1f,
+ 	//  0.1f, -0.1f,  0.1f,
+ 	// -0.1f,  0.9f,  0.1f,
+ 	// -0.1f,  0.9f, -0.1f,
+ 	//  0.1f,  0.9f, -0.1f,
+ 	//  0.1f,  0.9f,  0.1f
+ };
 
 GLuint lightIndices[] =
 {
 	0, 1, 2,
-	0, 2, 3,
-	0, 4, 7,
-	0, 7, 3,
-	3, 7, 6,
-	3, 6, 2,
-	2, 6, 5,
-	2, 5, 1,
-	1, 5, 4,
-	1, 4, 0,
-	4, 5, 6,
-	4, 6, 7
+	// 0, 2, 3,
+	// 0, 4, 7,
+	// 0, 7, 3,
+	// 3, 7, 6,
+	// 3, 6, 2,
+	// 2, 6, 5,
+	// 2, 5, 1,
+	// 1, 5, 4,
+	// 1, 4, 0,
+	// 4, 5, 6,
+	// 4, 6, 7
 };
 
 Camera* cam;
@@ -230,6 +230,11 @@ int main(int argc, char** argv)
 	read_particles_from_file = configJson["read_particles_from_file"];
 	if (read_particles_from_file) particles_conf_file = configJson["particles_conf_file"];
 
+	// create Bodies vector
+	bodies = new Body[DEFAULT_N_BODIES + DEFAULT_N_BODIES];
+	// give random positions
+	generateBodies(bodies, DEFAULT_N_BODIES, DEFAULT_N_BODIES, read_particles_from_file, particles_conf_file);
+
 	// Initialize GLFW
 	glfwInit();
 
@@ -323,8 +328,7 @@ int main(int argc, char** argv)
 	lightVBO.Unbind();
 	lightEBO.Unbind();
 
-
-	glm::vec3 lightPos = glm::vec3(0.5f, 0.5f, 0.5f);
+	glm::vec3 lightPos = glm::vec3(0.5f, +5.5f, 0.5f);
 	glm::mat4 lightModel = glm::mat4(1.0f);
 	lightModel = glm::translate(lightModel, lightPos);
 
@@ -369,11 +373,6 @@ int main(int argc, char** argv)
 	// Setup Platform/Renderer backends
 	ImGui_ImplGlfw_InitForOpenGL(window, true);          // Second param install_callback=true will install GLFW callbacks and chain to existing ones.
 	ImGui_ImplOpenGL3_Init();
-
-	// create Bodies vector
-	bodies = new Body[DEFAULT_N_BODIES + DEFAULT_N_BODIES];
-	// give random positions
-	generateBodies(bodies, DEFAULT_N_BODIES, DEFAULT_N_BODIES, read_particles_from_file, particles_conf_file);
 
 	if (configJson.contains("numBodies"))
 		numBodies = configJson["numBodies"];
