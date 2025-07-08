@@ -276,9 +276,6 @@ Press `C` to access the configuration panel with the following controls:
 - Textured spherical particles
 - Basic lighting system
 
-⏳ **Pending Features:**
-- Spherical light source (currently cubic)
-
 ## File Structure
 ```
 ├── include/              # Header code files
