@@ -141,8 +141,8 @@ Transforms the light source geometry into clip space for rendering.
 | `A`                 | Move left |
 | `S`                 | Move backward |
 | `D`                 | Move right |
-| `SPACE`             | Move up |
-| `LEFT CTRL`         | Move down |
+| `HOME`              | Move up |
+| `END`               | Move down |
 | `LEFT SHIFT`        | Speed boost (4x) |
 | `Left Mouse Button` | Look around (hold and move mouse) |
 | `V`                 | Reset camera position |

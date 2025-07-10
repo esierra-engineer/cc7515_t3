@@ -57,13 +57,13 @@ void Camera::KeyboardInputs(GLFWwindow* window, int key, int action)
 	{
 		Position += speed * glm::normalize(glm::cross(Orientation, Up));
 	}
-	if (key == GLFW_KEY_SPACE && (action == GLFW_PRESS || action == GLFW_REPEAT))
+	if (key == GLFW_KEY_END && (action == GLFW_PRESS || action == GLFW_REPEAT))
+	{
+		Position -= speed * Up;
+	}
+	if (key == GLFW_KEY_HOME && (action == GLFW_PRESS || action == GLFW_REPEAT))
 	{
 		Position += speed * Up;
-	}
-	if (key == GLFW_KEY_LEFT_CONTROL && (action == GLFW_PRESS || action == GLFW_REPEAT))
-	{
-		Position += speed * -Up;
 	}
 	if (key == GLFW_KEY_LEFT_SHIFT && action == GLFW_PRESS)
 	{
