@@ -1,6 +1,6 @@
 {
-  "width": 1280,
-  "height": 720,
+  "width": 1920,
+  "height": 1080,
   "camera_init_pos": {
     "x": 0.0,
     "y": 0.0,
@@ -15,7 +15,7 @@
   "local_size": 128,
   "sourceLightColor": [1.0, 1.0, 1.0, 1.0],
   "useGPU": true,
-  "stop": false,
+  "stop": true,
   "numBodies":  2048,
   "specialBodies":  2048,
   "read_particles_from_file": false,
