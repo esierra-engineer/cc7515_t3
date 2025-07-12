@@ -19,7 +19,7 @@
   "numBodies":  10,
   "specialBodies":  10,
   "read_particles_from_file": false,
-  "particles_conf_file": "/media/storage/git/cc7515_t3/resources/particles.csv",
-  "specialParticleTextureFile": "resources/grass.png",
+  "particles_conf_file": "resources/particles.csv",
+  "specialParticleTextureFile": "resources/basketball.png",
   "particleTextureFile": "resources/football.png"
 }

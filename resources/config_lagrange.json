@@ -19,7 +19,7 @@
   "numBodies":  2,
   "specialBodies":  1,
   "read_particles_from_file": true,
-  "particles_conf_file": "/media/storage/git/cc7515_t3/resources/particles_lagrange.csv",
-  "particleTextureFile": "resources/grass.png",
+  "particles_conf_file": "resources/particles_lagrange.csv",
+  "particleTextureFile": "resources/basket.png",
   "specialParticleTextureFile": "resources/football.png"
 }

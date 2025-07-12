@@ -20,5 +20,5 @@
   "specialBodies":  0,
   "read_particles_from_file": false,
   "particleTextureFile": "resources/football.png",
-  "specialParticleTextureFile": "resources/grass.png"
+  "specialParticleTextureFile": "resources/basketball.png"
 }
