@@ -56,6 +56,7 @@ int useGPU;
 bool stop;
 bool read_particles_from_file = CONF_READ_FILE;
 std::string particles_conf_file;
+float background_color[4] = {0.07f, 0.13f, 0.17f, 1.0f};
 
 
 Body* bodies;
@@ -403,7 +404,7 @@ int main(int argc, char** argv)
 	while (!glfwWindowShouldClose(window))
 	{
 		// Specify the color of the background
-		glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
+		glClearColor(background_color[0], background_color[1], background_color[2], background_color[3]);
 		// Clean the back buffer and depth buffer
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -492,6 +493,7 @@ int main(int argc, char** argv)
 			ImGui::SliderFloat("Particle Scale", &particleSize, 0.1f, 10.0f, "%.1f");
 			ImGui::SliderFloat("Special Particle Scale", &specialParticleSize, 0.1f, 10.0f, "%.1f");
 			ImGui::ColorEdit4("Light Color", sourceLightColor);
+			ImGui::ColorEdit4("Background Color", background_color);
 			if (ImGui::Button("Reset")) {
 				generateBodies(bodies, numBodies, specialBodies, read_particles_from_file, particles_conf_file);
 				showConf = !showConf;
