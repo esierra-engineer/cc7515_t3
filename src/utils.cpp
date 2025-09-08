@@ -22,6 +22,7 @@ void check(CUresult err, const char* func, const char* file, int line) {
 
 void generateBodies(Body* bodies, int n, int n_specials, bool from_file, std::string csv_path) {
 #define FACTOR 60.0f
+#define VEL_FACTOR 0.01f
     if (from_file) {
         io::CSVReader<10> in(csv_path);
         in.read_header(io::ignore_missing_column,
@@ -44,14 +45,15 @@ void generateBodies(Body* bodies, int n, int n_specials, bool from_file, std::st
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_real_distribution<float> dist(-FACTOR, FACTOR);
+        std::uniform_real_distribution<float> dist2(-VEL_FACTOR, VEL_FACTOR);
         for (int i = 0; i < n; ++i) {
             bodies[i].posVec = glm::vec3(dist(gen), dist(gen), dist(gen));
-            bodies[i].velVec = glm::vec3(0.0f);
+            bodies[i].velVec = glm::vec3(dist2(gen), dist2(gen), dist2(gen));
             bodies[i].special = false;
         }
         for (int i = DEFAULT_N_BODIES; i < DEFAULT_N_BODIES + n_specials; ++i) {
             bodies[i].posVec = glm::vec3(dist(gen), dist(gen), dist(gen));
-            bodies[i].velVec = glm::vec3(0.0f);
+            bodies[i].velVec = glm::vec3(dist2(gen), dist2(gen), dist2(gen));
             bodies[i].special = true;
         }
     }
@@ -62,8 +64,7 @@ CUfunction loadKernelSource(const char* filename, CUcontext* context) {
     checkCudaErrors(cuInit(0));
     CUdevice device;
     checkCudaErrors(cuDeviceGet(&device, 0));
-    //CUcontext context;
-    checkCudaErrors(cuCtxCreate(context, 0, device));
+    checkCudaErrors(cuCtxCreate(context, nullptr, 0, device));
 
     // Load PTX file
     CUmodule module;

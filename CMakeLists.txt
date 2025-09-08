@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.25)
 set(CMAKE_CUDA_COMPILER "/usr/local/cuda/bin/nvcc")
-set(CMAKE_CUDA_ARCHITECTURES native)
 project(CC7515_T3 LANGUAGES CXX CUDA C)
+set(CMAKE_CUDA_ARCHITECTURES native)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -88,7 +88,6 @@ target_link_libraries(CC7515_T3 PRIVATE glfw OpenGL::GL cuda nlohmann_json::nloh
 set_target_properties(CC7515_T3 PROPERTIES
         CUDA_SEPARABLE_COMPILATION ON
         CUDA_RESOLVE_DEVICE_SYMBOLS ON
-        CUDA_ARCHITECTURES 52 60 70 75 86
 )
 
 # Compiler options
